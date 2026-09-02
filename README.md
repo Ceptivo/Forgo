@@ -14,6 +14,26 @@ signup, a profile screen backed by Supabase, and the bottom-nav app shell
 yet. Everything is mobile-first and responsive across phone/tablet widths
 (see `lib/core/responsive/responsive.dart`).
 
+## Design system
+
+Black canvas, violet accent, bento-grid dashboard — see
+`lib/core/theme/app_theme.dart` and `lib/core/widgets/bento_grid.dart`.
+There's no light theme; black is the brand, not a system-preference mode.
+
+- **Colors** — `AppColors` in `app_theme.dart`: near-black surfaces on a
+  pure black background, a violet accent (`#8B5CF6`) with a brighter glow
+  variant for gradients, muted greys for secondary text.
+- **Type** — Manrope, bundled locally as a variable font
+  (`assets/fonts/Manrope-Variable.ttf`, registered per-weight in
+  `pubspec.yaml`) rather than fetched from Google Fonts at runtime — one
+  less network dependency on first launch.
+- **Bento grid** — `BentoGrid`/`BentoCard`/`BentoGridItem` in
+  `lib/core/widgets/bento_grid.dart` lay out unequal-sized cards (a full
+  width hero, half-width stat tiles, taller cards) the way the Home
+  dashboard does. `GlowBackground` adds the faint grid + soft violet glow
+  backdrop behind hero content. Reuse these for new screens rather than
+  hand-rolling another grid.
+
 ## Setup
 
 1. **Flutter SDK** — this project targets the `stable` channel (3.35.x).

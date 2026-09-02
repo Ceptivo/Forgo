@@ -14,9 +14,11 @@ class ForgoApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Forgo',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      // Black is the Forgo brand, not a system-preference mode — there is
+      // no light theme.
+      theme: AppTheme.dark(),
       darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.dark,
       routerConfig: router,
       builder: (context, child) {
         // Clamp system text scaling so large accessibility font sizes don't

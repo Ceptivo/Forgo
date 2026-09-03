@@ -5,6 +5,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/retryable_error.dart';
 import '../../../../core/widgets/stat_display.dart';
 import '../../../auth/application/auth_providers.dart';
+import '../../../streaks/application/streak_providers.dart';
+import '../../../streaks/domain/streak_badge.dart';
 import '../../application/social_providers.dart';
 import '../../domain/public_profile_stats.dart';
 
@@ -87,7 +89,9 @@ class UserProfileScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+                _UserBadgesRow(userId: userId),
+                const SizedBox(height: 20),
                 if (!isSelf)
                   SizedBox(
                     width: double.infinity,
@@ -98,6 +102,67 @@ class UserProfileScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+/// Streak-milestone badges this user has earned, shown so friends and
+/// followers can see what they've accomplished. Stays hidden entirely
+/// when there's nothing earned yet — this is a third-person view, so
+/// there's no "keep going" encouragement copy to fall back on.
+class _UserBadgesRow extends ConsumerWidget {
+  const _UserBadgesRow({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summaryAsync = ref.watch(streakSummaryProvider(userId));
+    final earned = earnedStreakBadges(summaryAsync.value?.longestWeeklyStreak ?? 0);
+    if (earned.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 12,
+      alignment: WrapAlignment.center,
+      children: [for (final badge in earned) _UserBadgeChip(badge: badge)],
+    );
+  }
+}
+
+class _UserBadgeChip extends StatelessWidget {
+  const _UserBadgeChip({required this.badge});
+
+  final StreakBadge badge;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: const BoxDecoration(
+            color: AppColors.ink,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.emoji_events_rounded,
+            color: AppColors.accent,
+            size: 24,
+          ),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: 68,
+          child: Text(
+            badge.label,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      ],
     );
   }
 }

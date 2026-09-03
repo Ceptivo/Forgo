@@ -141,47 +141,42 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
           children: [
             Text('Choose a goal type', style: textTheme.titleMedium),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: GoalTypeCard(
-                    icon: Icons.directions_run_rounded,
-                    title: 'Distance',
-                    subtitle: 'Verified via screenshot',
-                    selected: _type == GoalType.distance,
-                    onTap: () => setState(() {
-                      _type = GoalType.distance;
-                      _deadline = null;
-                    }),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: GoalTypeCard(
-                    icon: Icons.timer_outlined,
-                    title: 'Time',
-                    subtitle: 'Verified via screenshot',
-                    selected: _type == GoalType.time,
-                    onTap: () => setState(() {
-                      _type = GoalType.time;
-                      _deadline = null;
-                    }),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: GoalTypeCard(
-                    icon: Icons.monitor_weight_outlined,
-                    title: 'Weight loss',
-                    subtitle: 'Verified via scale photo',
-                    selected: _type == GoalType.weightLoss,
-                    onTap: () => setState(() {
-                      _type = GoalType.weightLoss;
-                      _deadline = null;
-                    }),
-                  ),
-                ),
-              ],
+            GoalTypeCard(
+              icon: Icons.directions_run_rounded,
+              title: 'Distance',
+              subtitle: 'Verified via screenshot',
+              description: 'Cover a target distance running, walking, '
+                  'cycling, or swimming.',
+              selected: _type == GoalType.distance,
+              onTap: () => setState(() {
+                _type = GoalType.distance;
+                _deadline = null;
+              }),
+            ),
+            const SizedBox(height: 10),
+            GoalTypeCard(
+              icon: Icons.timer_outlined,
+              title: 'Time',
+              subtitle: 'Verified via screenshot',
+              description: 'Keep moving for a set duration — run for 20 '
+                  'min, cycle for an hour, and so on.',
+              selected: _type == GoalType.time,
+              onTap: () => setState(() {
+                _type = GoalType.time;
+                _deadline = null;
+              }),
+            ),
+            const SizedBox(height: 10),
+            GoalTypeCard(
+              icon: Icons.monitor_weight_outlined,
+              title: 'Weight loss',
+              subtitle: 'Verified via scale photo',
+              description: 'Reach a target weight by a deadline you set.',
+              selected: _type == GoalType.weightLoss,
+              onTap: () => setState(() {
+                _type = GoalType.weightLoss;
+                _deadline = null;
+              }),
             ),
             if (_type == GoalType.distance) ...[
               const SizedBox(height: 24),

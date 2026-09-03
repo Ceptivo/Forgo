@@ -16,7 +16,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _submitting = false;
@@ -24,7 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _identifierController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -36,8 +36,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _errorMessage = null;
     });
     try {
-      await ref.read(authRepositoryProvider).signIn(
-        email: _emailController.text.trim(),
+      await ref.read(authRepositoryProvider).signInWithIdentifier(
+        identifier: _identifierController.text.trim(),
         password: _passwordController.text,
       );
       if (mounted) context.go('/home');
@@ -73,15 +73,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 32),
               if (_errorMessage != null) AuthErrorBanner(message: _errorMessage!),
               TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                autofillHints: const [AutofillHints.email],
+                controller: _identifierController,
+                autofillHints: const [AutofillHints.username, AutofillHints.email],
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email or username'),
                 validator: (value) {
-                  final email = value?.trim() ?? '';
-                  if (email.isEmpty) return 'Enter your email';
-                  if (!email.contains('@')) return 'Enter a valid email';
+                  if ((value ?? '').trim().isEmpty) {
+                    return 'Enter your email or username';
+                  }
                   return null;
                 },
               ),

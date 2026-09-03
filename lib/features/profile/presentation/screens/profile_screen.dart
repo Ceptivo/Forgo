@@ -12,9 +12,14 @@ import '../../../../core/widgets/retryable_error.dart';
 import '../../../auth/application/auth_providers.dart';
 import '../../../social/application/social_providers.dart';
 import '../../../social/presentation/screens/friends_screen.dart';
+import '../../../streaks/application/streak_providers.dart';
+import '../../../streaks/domain/streak_badge.dart';
 import '../../application/profile_providers.dart';
 import '../../domain/profile.dart';
 import 'settings_screen.dart';
+
+/// Gap (2) + pencil IconButton width (22) — see the name/pencil Row below.
+const _pencilSlotWidth = 24.0;
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -58,14 +63,20 @@ class ProfileScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    // Invisible spacer matching the trailing gap + pencil
+                    // width, so the Row being centered as a whole actually
+                    // centers the *name* — without it the pencil's width
+                    // pulls the name visibly left of center.
+                    const SizedBox(width: _pencilSlotWidth),
                     Flexible(
                       child: Text(
                         profile.fullName,
                         style: Theme.of(context).textTheme.titleLarge,
                         overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 2),
                     // Tight padding/constraints rather than the default
                     // 48x48 tap target — IconButton's usual hit area is
                     // asymmetric relative to the name text next to it and
@@ -75,7 +86,7 @@ class ProfileScreen extends ConsumerWidget {
                       icon: const Icon(Icons.edit_rounded, size: 16),
                       tooltip: 'Edit nickname',
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                      constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
                     ),
                   ],
                 ),
@@ -92,6 +103,8 @@ class ProfileScreen extends ConsumerWidget {
                 _CompletedGoalsCard(userId: profile.id),
                 const SizedBox(height: 12),
                 _CharityGivenCard(userId: profile.id),
+                const SizedBox(height: 12),
+                _BadgesSection(userId: profile.id),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: () => Navigator.of(context).push(
@@ -422,6 +435,88 @@ class _CharityGivenCard extends ConsumerWidget {
           Text('Given to charity', style: textTheme.bodySmall),
         ],
       ),
+    );
+  }
+}
+
+class _BadgesSection extends ConsumerWidget {
+  const _BadgesSection({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summaryAsync = ref.watch(streakSummaryProvider(userId));
+    final earned = earnedStreakBadges(summaryAsync.value?.longestWeeklyStreak ?? 0);
+    final textTheme = Theme.of(context).textTheme;
+
+    if (summaryAsync.isLoading) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.surfaceBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Badges', style: textTheme.titleMedium),
+          const SizedBox(height: 12),
+          if (earned.isEmpty)
+            Text(
+              'Keep a weekly streak going to earn your first badge.',
+              style: textTheme.bodySmall,
+            )
+          else
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (final badge in earned) _BadgeChip(badge: badge),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BadgeChip extends StatelessWidget {
+  const _BadgeChip({required this.badge});
+
+  final StreakBadge badge;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: const BoxDecoration(
+            color: AppColors.ink,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.emoji_events_rounded,
+            color: AppColors.accent,
+            size: 26,
+          ),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: 70,
+          child: Text(
+            badge.label,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -20,13 +20,18 @@ class AppColors {
 
   // Accent — mint green
   static const accent = Color(0xFF76FB91);
-  static const accentDeep = Color(0xFF1FA34A); // readable on white (text/icons)
+  // ~4.1:1 against `background` — darker than a pure brand green so link/
+  // icon text stays legible, not just decorative.
+  static const accentDeep = Color(0xFF178A3D);
   static const accentDim = Color(0xFFE3FDE9); // faint fill/tint
 
-  // Text
+  // Text — both grays are picked for ≥4.5:1 contrast against `background`
+  // (WCAG AA for normal-size text). The old values (#8A8A8A / #BFBFBF)
+  // read as faint/washed-out on the off-white canvas; these keep the same
+  // hierarchy (secondary darker than muted) while staying readable.
   static const textPrimary = Color(0xFF000000);
-  static const textSecondary = Color(0xFF8A8A8A);
-  static const textMuted = Color(0xFFBFBFBF);
+  static const textSecondary = Color(0xFF5C5C5C);
+  static const textMuted = Color(0xFF6A6A6A);
 
   // Status
   static const success = accentDeep;
@@ -174,9 +179,9 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textPrimary,
+          foregroundColor: AppColors.ink,
           minimumSize: const Size.fromHeight(56),
-          side: const BorderSide(color: AppColors.surfaceBorder, width: 1.5),
+          side: const BorderSide(color: AppColors.ink, width: 1.5),
           shape: const StadiumBorder(),
         ),
       ),

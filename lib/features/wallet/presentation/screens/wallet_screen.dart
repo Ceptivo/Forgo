@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
+import '../../../../core/widgets/retryable_error.dart';
 import '../../../profile/application/profile_providers.dart';
 import '../../application/wallet_providers.dart';
 import '../../domain/wallet_transaction.dart';
@@ -91,22 +92,22 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       Text(
                         'Wallet balance',
                         style: textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: AppColors.inkSoft,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'R${walletBalance.toStringAsFixed(2)}',
                         style: textTheme.headlineMedium?.copyWith(
-                          color: Colors.white,
+                          color: AppColors.ink,
                         ),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
                         onPressed: _startingTopUp ? null : _startTopUp,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.accentDeep,
+                          backgroundColor: AppColors.ink,
+                          foregroundColor: Colors.white,
                           minimumSize: const Size.fromHeight(48),
                         ),
                         icon: _startingTopUp
@@ -131,12 +132,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: Center(child: CircularProgressIndicator()),
                   ),
-                  error: (error, _) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Text(
-                      'Could not load transactions.',
-                      style: textTheme.bodyMedium,
-                    ),
+                  error: (error, _) => RetryableError(
+                    message: 'Could not load transactions.',
+                    onRetry: () => ref.invalidate(walletTransactionsProvider),
                   ),
                   data: (transactions) {
                     if (transactions.isEmpty) {

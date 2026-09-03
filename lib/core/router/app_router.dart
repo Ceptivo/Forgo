@@ -6,6 +6,7 @@ import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/goals/presentation/screens/goals_screen.dart';
+import '../../features/groups/presentation/screens/groups_list_screen.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/home/presentation/home_shell.dart';
 import '../../features/onboarding/application/onboarding_providers.dart';
@@ -81,6 +82,14 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/profile',
                 builder: (context, state) => const ProfileScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/groups',
+                builder: (context, state) => const GroupsListScreen(),
               ),
             ],
           ),

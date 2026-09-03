@@ -46,6 +46,11 @@ class HomeShell extends StatelessWidget {
       selectedIcon: Icons.person_rounded,
       label: 'Profile',
     ),
+    _Destination(
+      icon: Icons.groups_outlined,
+      selectedIcon: Icons.groups_rounded,
+      label: 'Groups',
+    ),
   ];
 
   @override

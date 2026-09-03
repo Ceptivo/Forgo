@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/responsive/responsive.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/bento_grid.dart';
+import '../../../core/widgets/retryable_error.dart';
 import '../../goals/application/goal_providers.dart';
 import '../../goals/domain/goal.dart';
 import '../../goals/presentation/screens/new_goal_screen.dart';
@@ -25,10 +26,16 @@ class DashboardScreen extends ConsumerWidget {
             ?.where((g) => g.status == GoalStatus.active)
             .length ??
         0;
+    final hasError = profileAsync.hasError || goalsAsync.hasError;
 
     void openNewGoal() => Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const NewGoalScreen()),
     );
+
+    void retry() {
+      ref.invalidate(currentProfileProvider);
+      ref.invalidate(goalsProvider);
+    }
 
     return Scaffold(
       body: ResponsivePage(
@@ -45,6 +52,11 @@ class DashboardScreen extends ConsumerWidget {
                 'Stake money, prove it with a photo, keep it.',
                 style: textTheme.bodyMedium,
               ),
+              if (hasError)
+                RetryableError(
+                  message: 'Could not load your data.',
+                  onRetry: retry,
+                ),
               const SizedBox(height: 24),
               BentoGrid(
                 items: [
@@ -159,14 +171,15 @@ class _ActiveGoalsCard extends StatelessWidget {
                   label: hasGoals
                       ? '$activeCount ACTIVE ${activeCount == 1 ? 'GOAL' : 'GOALS'}'
                       : 'NO ACTIVE GOALS',
-                  color: Colors.white,
+                  color: AppColors.ink,
+                  filled: true,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   hasGoals
                       ? 'Keep your streak alive'
                       : 'Start your first commitment',
-                  style: textTheme.titleLarge?.copyWith(color: Colors.white),
+                  style: textTheme.titleLarge?.copyWith(color: AppColors.ink),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -177,7 +190,7 @@ class _ActiveGoalsCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: AppColors.inkSoft,
                   ),
                 ),
               ],
@@ -185,7 +198,7 @@ class _ActiveGoalsCard extends StatelessWidget {
           ),
           const Icon(
             Icons.arrow_circle_right_rounded,
-            color: Colors.white,
+            color: AppColors.ink,
             size: 32,
           ),
         ],

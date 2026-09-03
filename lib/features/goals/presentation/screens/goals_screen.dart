@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
+import '../../../../core/widgets/retryable_error.dart';
 import '../../application/goal_providers.dart';
 import '../../domain/goal.dart';
 import 'new_goal_screen.dart';
@@ -32,51 +33,48 @@ class GoalsScreen extends ConsumerWidget {
           await ref.read(goalsProvider.future);
         },
         child: ResponsivePage(
-            child: goalsAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: 48),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (error, _) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 48),
-                child: Text(
-                  'Could not load goals.',
-                  style: textTheme.bodyMedium,
-                ),
-              ),
-              data: (goals) {
-                if (goals.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 48),
-                    child: Column(
-                      children: [
-                        const PillBadge(label: 'NO GOALS YET'),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Start your first commitment',
-                          style: textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Tap "New goal" to stake money on a goal.',
-                          textAlign: TextAlign.center,
-                          style: textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final goal in goals) _GoalCard(goal: goal),
-                    const SizedBox(height: 72), // clear of the FAB
-                  ],
-                );
-              },
+          child: goalsAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 48),
+              child: Center(child: CircularProgressIndicator()),
             ),
+            error: (error, _) => RetryableError(
+              message: 'Could not load goals.',
+              onRetry: () => ref.invalidate(goalsProvider),
+            ),
+            data: (goals) {
+              if (goals.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 48),
+                  child: Column(
+                    children: [
+                      const PillBadge(label: 'NO GOALS YET'),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Start your first commitment',
+                        style: textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Tap "New goal" to stake money on a goal.',
+                        textAlign: TextAlign.center,
+                        style: textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final goal in goals) _GoalCard(goal: goal),
+                  const SizedBox(height: 72), // clear of the FAB
+                ],
+              );
+            },
           ),
         ),
+      ),
     );
   }
 }

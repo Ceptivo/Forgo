@@ -5,7 +5,10 @@ import 'package:intl/intl.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
+import '../../../../core/widgets/retryable_error.dart';
 import '../../../auth/application/auth_providers.dart';
+import '../../../social/application/social_providers.dart';
+import '../../../social/presentation/screens/friends_screen.dart';
 import '../../application/profile_providers.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -22,9 +25,9 @@ class ProfileScreen extends ConsumerWidget {
         child: profileAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Center(
-              child: Text(
-                'Could not load profile.\n$error',
-                textAlign: TextAlign.center,
+              child: RetryableError(
+                message: 'Could not load profile.',
+                onRetry: () => ref.invalidate(currentProfileProvider),
               ),
             ),
             data: (profile) {
@@ -49,7 +52,7 @@ class ProfileScreen extends ConsumerWidget {
                             ? profile.fullName[0].toUpperCase()
                             : '?',
                         style: textTheme.headlineMedium?.copyWith(
-                          color: Colors.white,
+                          color: AppColors.ink,
                         ),
                       ),
                     ),
@@ -74,14 +77,14 @@ class ProfileScreen extends ConsumerWidget {
                               Text(
                                 'Wallet balance',
                                 style: textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.85),
+                                  color: AppColors.inkSoft,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 'R${profile.walletBalanceRand.toStringAsFixed(2)}',
                                 style: textTheme.headlineMedium?.copyWith(
-                                  color: Colors.white,
+                                  color: AppColors.ink,
                                 ),
                               ),
                             ],
@@ -110,24 +113,21 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       BentoGridItem(
                         size: BentoSize.half,
-                        child: BentoCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.flag_rounded,
-                                color: AppColors.accentDeep,
-                              ),
-                              const Spacer(),
-                              Text('0', style: textTheme.titleMedium),
-                              Text('Goals completed', style: textTheme.bodySmall),
-                            ],
-                          ),
-                        ),
+                        child: _CompletedGoalsCard(userId: profile.id),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
+                  _FollowStatsRow(userId: profile.id),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const FriendsScreen()),
+                    ),
+                    icon: const Icon(Icons.person_add_alt_1_rounded),
+                    label: const Text('Find friends'),
+                  ),
+                  const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: () =>
                         ref.read(authRepositoryProvider).signOut(),
@@ -139,6 +139,88 @@ class ProfileScreen extends ConsumerWidget {
             },
           ),
         ),
+    );
+  }
+}
+
+class _CompletedGoalsCard extends ConsumerWidget {
+  const _CompletedGoalsCard({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textTheme = Theme.of(context).textTheme;
+    final statsAsync = ref.watch(publicProfileStatsProvider(userId));
+    final completed = statsAsync.value?.completedGoalsCount;
+
+    return BentoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.flag_rounded, color: AppColors.accentDeep),
+          const Spacer(),
+          Text(completed?.toString() ?? '—', style: textTheme.titleMedium),
+          Text('Goals completed', style: textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+class _FollowStatsRow extends ConsumerWidget {
+  const _FollowStatsRow({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(publicProfileStatsProvider(userId));
+    final stats = statsAsync.value;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.surfaceBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _FollowStat(
+              label: 'Followers',
+              value: stats?.followerCount,
+            ),
+          ),
+          Container(width: 1, height: 32, color: AppColors.surfaceBorder),
+          Expanded(
+            child: _FollowStat(
+              label: 'Following',
+              value: stats?.followingCount,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FollowStat extends StatelessWidget {
+  const _FollowStat({required this.label, required this.value});
+
+  final String label;
+  final int? value;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      children: [
+        Text(value?.toString() ?? '—', style: textTheme.titleLarge),
+        const SizedBox(height: 2),
+        Text(label, style: textTheme.bodySmall),
+      ],
     );
   }
 }

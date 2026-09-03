@@ -2,6 +2,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/profile.dart';
 
+/// How long a single request waits before giving up and surfacing a
+/// retryable error, rather than leaving the caller's spinner running
+/// indefinitely on a stalled connection.
+const _networkTimeout = Duration(seconds: 12);
+
 class ProfileRepository {
   ProfileRepository(this._client);
 
@@ -12,7 +17,8 @@ class ProfileRepository {
         .from('profiles')
         .select()
         .eq('id', userId)
-        .single();
+        .single()
+        .timeout(_networkTimeout);
     return Profile.fromMap(row);
   }
 
@@ -20,6 +26,7 @@ class ProfileRepository {
     return _client
         .from('profiles')
         .update({'full_name': fullName})
-        .eq('id', userId);
+        .eq('id', userId)
+        .timeout(_networkTimeout);
   }
 }

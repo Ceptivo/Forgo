@@ -3,6 +3,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/goal.dart';
 
+/// How long a single request waits before giving up and surfacing a
+/// retryable error, rather than leaving the caller's spinner running
+/// indefinitely on a stalled connection.
+const _networkTimeout = Duration(seconds: 12);
+
 class GoalRepository {
   GoalRepository(this._client);
 
@@ -13,7 +18,8 @@ class GoalRepository {
         .from('goals')
         .select()
         .eq('user_id', userId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .timeout(_networkTimeout);
     return rows.map(Goal.fromMap).toList();
   }
 
@@ -78,7 +84,7 @@ class GoalRepository {
               : distanceActivityToString(distanceActivity),
           'p_weight_loss_target_kg': weightLossTargetKg,
         },
-      );
+      ).timeout(_networkTimeout);
       return Goal.fromMap(result as Map<String, dynamic>);
     } on PostgrestException catch (e) {
       if (e.message.contains('Insufficient wallet balance')) {

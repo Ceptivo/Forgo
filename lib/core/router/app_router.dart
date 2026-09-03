@@ -9,6 +9,7 @@ import '../../features/home/presentation/coming_soon_screen.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/home/presentation/home_shell.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/wallet/presentation/screens/wallet_screen.dart';
 import 'go_router_refresh_stream.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -63,13 +64,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/wallet',
-                builder: (context, state) => const ComingSoonScreen(
-                  title: 'Wallet',
-                  icon: Icons.account_balance_wallet_outlined,
-                  description:
-                      'Top-ups and withdrawals via Payfast are coming in a '
-                      'later build step.',
-                ),
+                builder: (context, state) => const WalletScreen(),
               ),
             ],
           ),

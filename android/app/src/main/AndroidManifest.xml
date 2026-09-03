@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The debug/profile manifests get this for free (for the DevTools
+         connection); release builds don't unless it's declared here too —
+         and the app is Supabase/Payfast-backed, so it needs real network
+         access in every build type. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="Forgo"
         android:name="${applicationName}"

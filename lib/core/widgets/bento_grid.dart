@@ -76,9 +76,16 @@ class BentoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // No explicit height here (only width, which is safe under both tight
+    // and loose-but-bounded constraints): inside a BentoGrid cell the
+    // incoming constraints are already tight and force full height
+    // regardless, but a bare `height: double.infinity` blows up when this
+    // card is used standalone inside an unbounded-height parent like a
+    // plain Column (the wallet screen's balance card and transaction
+    // tiles) — same failure mode as an unbounded Row/Column child
+    // elsewhere in this app.
     final card = Container(
       width: double.infinity,
-      height: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
         color: gradient == null ? AppColors.surface : null,

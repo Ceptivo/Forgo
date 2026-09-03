@@ -8,11 +8,12 @@ full product spec and build order.
 
 ## Status
 
-Step 1 of the build order is done: email/password auth, an 18+ age gate at
-signup, a profile screen backed by Supabase, and the bottom-nav app shell
-(Home / Goals / Wallet / Profile) with placeholders for the tabs not built
-yet. Everything is mobile-first and responsive across phone/tablet widths
-(see `lib/core/responsive/responsive.dart`).
+Step 1 (auth) and step 2 (wallet top-ups) of the build order are done:
+email/password auth, an 18+ age gate at signup, a profile screen, and a
+wallet with Payfast top-ups (presets + custom amount, in-app WebView
+checkout, transaction history). Goals/charity/verification are still
+placeholders. Everything is mobile-first and responsive across phone/tablet
+widths (see `lib/core/responsive/responsive.dart`).
 
 ## Design system
 
@@ -59,7 +60,38 @@ There's no light theme; black is the brand, not a system-preference mode.
    server-side `CHECK` constraint enforcing the 18+ minimum age as a
    backstop to the client-side check.
 
-4. Install dependencies and run:
+4. **Wallet schema** — run `supabase/migrations/0002_wallet_transactions.sql`
+   the same way. Adds the `wallet_transactions` table, RLS so users can only
+   see their own rows, and a `credit_wallet_from_transaction` function that
+   only the Edge Functions below can call (never the app directly).
+
+5. **Deploy the Payfast Edge Functions** — these hold the Payfast signing
+   logic and the merchant credentials; the app never sees either. Requires
+   the [Supabase CLI](https://supabase.com/docs/guides/cli):
+
+   ```
+   supabase login
+   supabase link --project-ref zfsklkcsfpygjmgwzaeb
+   supabase functions deploy create-payfast-payment payfast-itn payfast-return payfast-cancel
+   ```
+
+6. **Set Payfast secrets** — once you have a Payfast account (sandbox is
+   free — https://developers.payfast.co.za/docs#sandbox — and fine to start
+   with):
+
+   ```
+   supabase secrets set PAYFAST_MERCHANT_ID=your-merchant-id
+   supabase secrets set PAYFAST_MERCHANT_KEY=your-merchant-key
+   supabase secrets set PAYFAST_PASSPHRASE=your-passphrase
+   supabase secrets set PAYFAST_MODE=sandbox
+   ```
+
+   Switch `PAYFAST_MODE` to `live` (and swap in live credentials) when
+   you're ready to accept real payments. In your Payfast dashboard, the
+   notify URL Payfast will call is
+   `https://zfsklkcsfpygjmgwzaeb.supabase.co/functions/v1/payfast-itn`.
+
+7. Install dependencies and run:
 
    ```
    flutter pub get
@@ -74,9 +106,11 @@ lib/
   features/
     auth/          # login/signup, 18+ age gate
     profile/       # profile screen + Supabase-backed profile repository
+    wallet/        # balance card, Payfast top-up flow, transaction history
     home/          # bottom-nav shell + dashboard + "coming soon" tab placeholders
 supabase/
   migrations/      # SQL to run against the Supabase project (not auto-applied)
+  functions/       # Deno Edge Functions — Payfast signing + ITN webhook (not auto-deployed)
 ```
 
 ## Testing
@@ -84,16 +118,23 @@ supabase/
 ```
 flutter analyze
 flutter test
+
+# Edge Functions (requires Deno: https://docs.deno.com/runtime/getting_started/installation/)
+deno test supabase/functions/_shared/payfast_test.ts
 ```
 
 No Android SDK is available in this build environment, so `flutter run` /
 `flutter build apk` haven't been exercised here — install Android Studio (or
 just the command-line SDK) locally to build and run on a device/emulator.
+The Payfast flow is untested end-to-end for the same reason (no merchant
+account yet) — the signature/round-trip logic is unit-tested, but a real
+sandbox top-up should be tried once secrets are configured.
 
 ## Next build steps
 
-Per the build plan's suggested order: wallet + Payfast top-up, goal creation
-flow, charity selection, camera-based verification capture, Claude vision
-verification, forfeiture/success logic, the founder-only flagged-submissions
-review queue, push notifications, and the Payfast withdrawal flow (pending
-confirmation Payfast supports payouts, not just collection).
+Per the build plan's suggested order: goal creation flow, charity selection,
+camera-based verification capture, Claude vision verification,
+forfeiture/success logic, the founder-only flagged-submissions review queue,
+push notifications, and the Payfast withdrawal flow (pending confirmation
+Payfast supports payouts, not just collection — see the build plan's flag on
+this).

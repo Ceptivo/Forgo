@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/responsive/responsive.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/bento_grid.dart';
-import '../../../core/widgets/glow_background.dart';
 import '../../goals/application/goal_providers.dart';
 import '../../goals/domain/goal.dart';
 import '../../goals/presentation/screens/new_goal_screen.dart';
@@ -32,12 +31,11 @@ class DashboardScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      body: GlowBackground(
-        child: ResponsivePage(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 8),
+      body: ResponsivePage(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 8),
               Text(
                 firstName == null ? 'Welcome to Forgo' : 'Hey, $firstName',
                 style: textTheme.headlineMedium,
@@ -91,9 +89,8 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-            ],
-          ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -122,7 +119,7 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: iconColor ?? AppColors.accentBright, size: 22),
+          Icon(icon, color: iconColor ?? AppColors.accentDeep, size: 22),
           const Spacer(),
           Text(
             value,
@@ -216,7 +213,7 @@ class _NewGoalCard extends StatelessWidget {
               color: AppColors.accentDim,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.add_rounded, color: AppColors.accentBright),
+            child: const Icon(Icons.add_rounded, color: AppColors.accentDeep),
           ),
           const SizedBox(width: 14),
           Expanded(

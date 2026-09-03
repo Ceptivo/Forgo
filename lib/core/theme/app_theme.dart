@@ -1,46 +1,50 @@
 import 'package:flutter/material.dart';
 
-/// Forgo's brand: black canvas, violet accent, bold condensed type — the
-/// same register as premium fitness-app dark UIs (big glowing numbers,
-/// pill chips, bento-grid dashboards) rather than a generic Material dark
-/// theme. There is deliberately no light theme: black is the brand, not a
-/// mode.
+/// Forgo's brand: clean white/light-gray canvas, bold black UI elements
+/// (pill buttons, floating nav dock, big numbers), and a single mint-green
+/// accent — the same register as premium light-mode product dashboards
+/// and onboarding flows (Outfit type, generous rounding, black pills).
 class AppColors {
   AppColors._();
 
   // Canvas
-  static const background = Color(0xFF000000);
-  static const surface = Color(0xFF121016); // card background
-  static const surfaceElevated = Color(0xFF1B1822); // raised / hero card
-  static const surfaceBorder = Color(0xFF2A2732);
+  static const background = Color(0xFFF6F6F6);
+  static const surface = Color(0xFFFFFFFF); // card background
+  static const surfaceElevated = Color(0xFFFFFFFF);
+  static const surfaceBorder = Color(0xFFEBEBEB);
+  static const surfaceMuted = Color(0xFFF1F1F1); // input fill, ticks
 
-  // Accent — violet, with a lighter glow variant for gradients/shadows
-  static const accent = Color(0xFF8B5CF6);
-  static const accentBright = Color(0xFFB794F6);
-  static const accentDim = Color(0xFF4C2E8C);
+  // Black — the UI's primary "ink" color: pill buttons, nav dock, headlines
+  static const ink = Color(0xFF000000);
+  static const inkSoft = Color(0xFF1A1A1A);
+
+  // Accent — mint green
+  static const accent = Color(0xFF76FB91);
+  static const accentDeep = Color(0xFF1FA34A); // readable on white (text/icons)
+  static const accentDim = Color(0xFFE3FDE9); // faint fill/tint
 
   // Text
-  static const textPrimary = Color(0xFFF5F3F7);
-  static const textSecondary = Color(0xFFA6A2AF);
-  static const textMuted = Color(0xFF6F6C79);
+  static const textPrimary = Color(0xFF000000);
+  static const textSecondary = Color(0xFF8A8A8A);
+  static const textMuted = Color(0xFFBFBFBF);
 
   // Status
-  static const success = Color(0xFF34D399);
-  static const danger = Color(0xFFF87171);
-  static const warning = Color(0xFFFBBF24);
+  static const success = accentDeep;
+  static const danger = Color(0xFFE5484D);
+  static const warning = Color(0xFFF5A623);
 
   static const accentGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [accent, Color(0xFF6D28D9)],
+    colors: [Color(0xFFB9FEC7), accent],
   );
 }
 
-/// Builds a [TextStyle] against the bundled Manrope variable font
-/// (`assets/fonts/Manrope-Variable.ttf`, registered per-weight in
+/// Builds a [TextStyle] against the bundled Outfit variable font
+/// (`assets/fonts/Outfit-Variable.ttf`, registered per-weight in
 /// pubspec.yaml) rather than fetching it from Google's font CDN at
 /// runtime — one less network dependency on first launch.
-TextStyle _manrope({
+TextStyle _outfit({
   required double fontSize,
   required FontWeight fontWeight,
   Color? color,
@@ -48,7 +52,7 @@ TextStyle _manrope({
   double? height,
 }) {
   return TextStyle(
-    fontFamily: 'Manrope',
+    fontFamily: 'Outfit',
     fontSize: fontSize,
     fontWeight: fontWeight,
     color: color,
@@ -60,15 +64,15 @@ TextStyle _manrope({
 class AppTheme {
   AppTheme._();
 
-  static ThemeData dark() {
+  static ThemeData light() {
     final base = ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.background,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         surface: AppColors.background,
-        primary: AppColors.accent,
-        secondary: AppColors.accentBright,
+        primary: AppColors.ink,
+        secondary: AppColors.accentDeep,
         error: AppColors.danger,
         onSurface: AppColors.textPrimary,
         onPrimary: Colors.white,
@@ -77,48 +81,48 @@ class AppTheme {
 
     final textTheme = base.textTheme
         .apply(
-          fontFamily: 'Manrope',
+          fontFamily: 'Outfit',
           bodyColor: AppColors.textPrimary,
           displayColor: AppColors.textPrimary,
         )
         .copyWith(
-          headlineMedium: _manrope(
-            fontSize: 30,
-            fontWeight: FontWeight.w800,
-            height: 1.15,
+          headlineMedium: _outfit(
+            fontSize: 32,
+            fontWeight: FontWeight.w700,
+            height: 1.1,
             letterSpacing: -0.5,
             color: AppColors.textPrimary,
           ),
-          headlineSmall: _manrope(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
+          headlineSmall: _outfit(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
             color: AppColors.textPrimary,
           ),
-          titleLarge: _manrope(
+          titleLarge: _outfit(
             fontSize: 18,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
-          titleMedium: _manrope(
+          titleMedium: _outfit(
             fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
-          bodyMedium: _manrope(
+          bodyMedium: _outfit(
             fontSize: 14,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w400,
             color: AppColors.textSecondary,
             height: 1.4,
           ),
-          bodySmall: _manrope(
+          bodySmall: _outfit(
             fontSize: 12,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w400,
             color: AppColors.textMuted,
           ),
-          labelLarge: _manrope(
+          labelLarge: _outfit(
             fontSize: 14,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             letterSpacing: 0.1,
           ),
         );
@@ -135,24 +139,24 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AppColors.surfaceMuted,
         labelStyle: const TextStyle(color: AppColors.textSecondary),
         hintStyle: const TextStyle(color: AppColors.textMuted),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
+          horizontal: 18,
           vertical: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.surfaceBorder),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.surfaceBorder),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.ink, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -161,23 +165,19 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accent,
+          backgroundColor: AppColors.ink,
           foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(54),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          textStyle: _manrope(fontSize: 16, fontWeight: FontWeight.w700),
+          minimumSize: const Size.fromHeight(56),
+          shape: const StadiumBorder(),
+          textStyle: _outfit(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
-          minimumSize: const Size.fromHeight(54),
-          side: const BorderSide(color: AppColors.surfaceBorder),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          minimumSize: const Size.fromHeight(56),
+          side: const BorderSide(color: AppColors.surfaceBorder, width: 1.5),
+          shape: const StadiumBorder(),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -186,7 +186,7 @@ class AppTheme {
         // inline inside Rows (e.g. "Already have an account? Log in"), and
         // Size.fromHeight's infinite width breaks that layout.
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.accentBright,
+          foregroundColor: AppColors.accentDeep,
           minimumSize: const Size(0, 44),
         ),
       ),
@@ -201,29 +201,29 @@ class AppTheme {
       ),
       dividerTheme: const DividerThemeData(color: AppColors.surfaceBorder),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.accentDim,
+        backgroundColor: AppColors.ink,
+        indicatorColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return textTheme.bodySmall?.copyWith(
-            color: selected ? AppColors.accentBright : AppColors.textMuted,
+            color: selected ? AppColors.ink : Colors.white70,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? AppColors.accentBright : AppColors.textMuted,
+            color: selected ? AppColors.ink : Colors.white70,
           );
         }),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.accentDim,
-        selectedLabelTextStyle: const TextStyle(color: AppColors.accentBright),
+        selectedLabelTextStyle: const TextStyle(color: AppColors.accentDeep),
         unselectedLabelTextStyle: const TextStyle(color: AppColors.textMuted),
-        selectedIconTheme: const IconThemeData(color: AppColors.accentBright),
+        selectedIconTheme: const IconThemeData(color: AppColors.accentDeep),
         unselectedIconTheme: const IconThemeData(color: AppColors.textMuted),
       ),
       iconTheme: const IconThemeData(color: AppColors.textSecondary),
@@ -235,9 +235,9 @@ class AppTheme {
       ),
       datePickerTheme: DatePickerThemeData(
         backgroundColor: AppColors.surfaceElevated,
-        headerBackgroundColor: AppColors.accent,
+        headerBackgroundColor: AppColors.ink,
         headerForegroundColor: Colors.white,
-        todayForegroundColor: WidgetStateProperty.all(AppColors.accentBright),
+        todayForegroundColor: WidgetStateProperty.all(AppColors.accentDeep),
       ),
     );
   }

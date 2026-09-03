@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
-import '../../../../core/widgets/glow_background.dart';
 import '../../application/goal_providers.dart';
 import '../../domain/goal.dart';
 import 'new_goal_screen.dart';
@@ -27,13 +26,12 @@ class GoalsScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('New goal'),
       ),
-      body: GlowBackground(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(goalsProvider);
-            await ref.read(goalsProvider.future);
-          },
-          child: ResponsivePage(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(goalsProvider);
+          await ref.read(goalsProvider.future);
+        },
+        child: ResponsivePage(
             child: goalsAsync.when(
               loading: () => const Padding(
                 padding: EdgeInsets.symmetric(vertical: 48),
@@ -79,7 +77,6 @@ class GoalsScreen extends ConsumerWidget {
             ),
           ),
         ),
-      ),
     );
   }
 }
@@ -106,7 +103,7 @@ class _GoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final (statusColor, statusLabel) = switch (goal.status) {
-      GoalStatus.active => (AppColors.accentBright, 'Active'),
+      GoalStatus.active => (AppColors.accentDeep, 'Active'),
       GoalStatus.completed => (AppColors.success, 'Completed'),
       GoalStatus.failed => (AppColors.danger, 'Failed'),
       GoalStatus.cancelled => (AppColors.textMuted, 'Cancelled'),
@@ -124,7 +121,7 @@ class _GoalCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(_goalIcon(goal), color: AppColors.accentBright),
+                Icon(_goalIcon(goal), color: AppColors.accentDeep),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(goal.title, style: textTheme.titleMedium),

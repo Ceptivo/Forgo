@@ -41,6 +41,7 @@ dependencies:
   intl: ^0.20.3
   flutter_staggered_grid_view: ^0.7.0
   webview_flutter: ^4.13.1
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
@@ -52,7 +53,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
-  shared_preferences: ^2.5.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -75,24 +75,26 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 
-  # Manrope — a single variable-font file registered once per weight so
+  # Outfit — a single variable-font file registered once per weight so
   # Skia picks the right instance off its wght axis. Bundled locally
   # (rather than via google_fonts) so the brand typeface doesn't depend on
   # a network fetch on first launch.
   fonts:
-    - family: Manrope
+    - family: Outfit
       fonts:
-        - asset: assets/fonts/Manrope-Variable.ttf
+        - asset: assets/fonts/Outfit-Variable.ttf
           weight: 200
-        - asset: assets/fonts/Manrope-Variable.ttf
+        - asset: assets/fonts/Outfit-Variable.ttf
           weight: 300
-        - asset: assets/fonts/Manrope-Variable.ttf
+        - asset: assets/fonts/Outfit-Variable.ttf
           weight: 400
-        - asset: assets/fonts/Manrope-Variable.ttf
+        - asset: assets/fonts/Outfit-Variable.ttf
           weight: 500
-        - asset: assets/fonts/Manrope-Variable.ttf
+        - asset: assets/fonts/Outfit-Variable.ttf
           weight: 600
-        - asset: assets/fonts/Manrope-Variable.ttf
+        - asset: assets/fonts/Outfit-Variable.ttf
           weight: 700
-        - asset: assets/fonts/Manrope-Variable.ttf
+        - asset: assets/fonts/Outfit-Variable.ttf
           weight: 800
+        - asset: assets/fonts/Outfit-Variable.ttf
+          weight: 900

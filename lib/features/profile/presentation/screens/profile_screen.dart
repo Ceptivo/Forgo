@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
-import '../../../../core/widgets/glow_background.dart';
 import '../../../auth/application/auth_providers.dart';
 import '../../application/profile_providers.dart';
 
@@ -19,9 +18,8 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
-      body: GlowBackground(
-        child: ResponsivePage(
-          child: profileAsync.when(
+      body: ResponsivePage(
+        child: profileAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Center(
               child: Text(
@@ -98,7 +96,7 @@ class ProfileScreen extends ConsumerWidget {
                             children: [
                               const Icon(
                                 Icons.cake_rounded,
-                                color: AppColors.accentBright,
+                                color: AppColors.accentDeep,
                               ),
                               const Spacer(),
                               Text(
@@ -118,7 +116,7 @@ class ProfileScreen extends ConsumerWidget {
                             children: [
                               const Icon(
                                 Icons.flag_rounded,
-                                color: AppColors.accentBright,
+                                color: AppColors.accentDeep,
                               ),
                               const Spacer(),
                               Text('0', style: textTheme.titleMedium),
@@ -141,7 +139,6 @@ class ProfileScreen extends ConsumerWidget {
             },
           ),
         ),
-      ),
     );
   }
 }

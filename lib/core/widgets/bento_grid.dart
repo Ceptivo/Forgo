@@ -91,7 +91,9 @@ class BentoCard extends StatelessWidget {
         color: gradient == null ? AppColors.surface : null,
         gradient: gradient,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.surfaceBorder),
+        border: gradient == null
+            ? Border.all(color: AppColors.surfaceBorder)
+            : null,
       ),
       child: child,
     );
@@ -130,11 +132,16 @@ class PillBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = color ?? AppColors.accentBright;
+    final tint = color ?? AppColors.accentDeep;
+    final onTint = filled
+        ? (tint == AppColors.ink || tint == Colors.black
+              ? Colors.white
+              : AppColors.ink)
+        : tint;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: filled ? tint : tint.withValues(alpha: 0.14),
+        color: filled ? tint : tint.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
         border: filled ? null : Border.all(color: tint.withValues(alpha: 0.4)),
       ),
@@ -142,7 +149,7 @@ class PillBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: filled ? Colors.black : tint),
+            Icon(icon, size: 14, color: onTint),
             const SizedBox(width: 4),
           ],
           Text(
@@ -150,7 +157,7 @@ class PillBadge extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: filled ? Colors.black : tint,
+              color: onTint,
             ),
           ),
         ],

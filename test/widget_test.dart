@@ -5,10 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:forgo/app.dart';
+import 'package:forgo/features/onboarding/application/onboarding_providers.dart';
 
 void main() {
+  late SharedPreferences prefs;
+
   setUpAll(() async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({'has_seen_onboarding': true});
+    prefs = await SharedPreferences.getInstance();
     await Supabase.initialize(
       url: 'https://example.supabase.co',
       publishableKey: 'test-anon-key',
@@ -18,7 +22,12 @@ void main() {
   testWidgets('Unauthenticated app boots to the login screen', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: ForgoApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: const ForgoApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Welcome back'), findsOneWidget);

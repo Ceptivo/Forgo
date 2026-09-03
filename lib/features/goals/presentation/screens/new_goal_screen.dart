@@ -303,13 +303,13 @@ class _ActivityChip extends StatelessWidget {
             Icon(
               _distanceActivityIcons[activity],
               size: 18,
-              color: selected ? AppColors.accentBright : AppColors.textSecondary,
+              color: selected ? AppColors.accentDeep : AppColors.textSecondary,
             ),
             const SizedBox(width: 6),
             Text(
               distanceActivityLabel(activity),
               style: TextStyle(
-                color: selected ? AppColors.accentBright : AppColors.textPrimary,
+                color: selected ? AppColors.accentDeep : AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),

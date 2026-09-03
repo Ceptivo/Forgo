@@ -41,7 +41,7 @@ class GoalTypeCard extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: selected ? AppColors.accentBright : AppColors.textSecondary,
+                color: selected ? AppColors.accentDeep : AppColors.textSecondary,
                 size: 28,
               ),
               const SizedBox(height: 12),

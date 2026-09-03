@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
-import '../../../../core/widgets/glow_background.dart';
 import '../../../profile/application/profile_providers.dart';
 import '../../application/wallet_providers.dart';
 import '../../domain/wallet_transaction.dart';
@@ -78,10 +77,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Wallet')),
-      body: GlowBackground(
-        child: RefreshIndicator(
-          onRefresh: _refresh,
-          child: ResponsivePage(
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: ResponsivePage(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -108,7 +106,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                         onPressed: _startingTopUp ? null : _startTopUp,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: AppColors.accent,
+                          foregroundColor: AppColors.accentDeep,
                           minimumSize: const Size.fromHeight(48),
                         ),
                         icon: _startingTopUp
@@ -162,7 +160,6 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 }

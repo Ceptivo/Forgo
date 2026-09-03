@@ -101,7 +101,7 @@ class _PresetChip extends StatelessWidget {
         child: Text(
           'R$rand',
           style: TextStyle(
-            color: selected ? AppColors.accentBright : AppColors.textPrimary,
+            color: selected ? AppColors.accentDeep : AppColors.textPrimary,
             fontWeight: FontWeight.w700,
           ),
         ),

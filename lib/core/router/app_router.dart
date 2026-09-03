@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/auth_providers.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
-import '../../features/home/presentation/coming_soon_screen.dart';
+import '../../features/goals/presentation/screens/goals_screen.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/home/presentation/home_shell.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -50,13 +49,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/goals',
-                builder: (context, state) => const ComingSoonScreen(
-                  title: 'Goals',
-                  icon: Icons.flag_outlined,
-                  description:
-                      'Goal creation — goal type, stake amount, and '
-                      'charity selection — is coming in the next build step.',
-                ),
+                builder: (context, state) => const GoalsScreen(),
               ),
             ],
           ),

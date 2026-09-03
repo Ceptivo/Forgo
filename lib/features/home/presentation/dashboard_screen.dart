@@ -6,6 +6,9 @@ import '../../../core/responsive/responsive.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/bento_grid.dart';
 import '../../../core/widgets/glow_background.dart';
+import '../../goals/application/goal_providers.dart';
+import '../../goals/domain/goal.dart';
+import '../../goals/presentation/screens/new_goal_screen.dart';
 import '../../profile/application/profile_providers.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -14,9 +17,19 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(currentProfileProvider);
+    final goalsAsync = ref.watch(goalsProvider);
     final textTheme = Theme.of(context).textTheme;
     final firstName = profileAsync.value?.fullName.split(' ').first;
     final walletBalance = profileAsync.value?.walletBalanceRand ?? 0;
+    final activeGoalsCount =
+        goalsAsync.value
+            ?.where((g) => g.status == GoalStatus.active)
+            .length ??
+        0;
+
+    void openNewGoal() => Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const NewGoalScreen()),
+    );
 
     return Scaffold(
       body: GlowBackground(
@@ -39,7 +52,12 @@ class DashboardScreen extends ConsumerWidget {
                 items: [
                   BentoGridItem(
                     size: BentoSize.wide,
-                    child: _ActiveGoalsCard(onTap: () => context.go('/goals')),
+                    child: _ActiveGoalsCard(
+                      activeCount: activeGoalsCount,
+                      onTap: activeGoalsCount == 0
+                          ? openNewGoal
+                          : () => context.go('/goals'),
+                    ),
                   ),
                   BentoGridItem(
                     size: BentoSize.half,
@@ -61,7 +79,7 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                   BentoGridItem(
                     size: BentoSize.wide,
-                    child: _NewGoalCard(onTap: () => context.go('/goals')),
+                    child: _NewGoalCard(onTap: openNewGoal),
                   ),
                   BentoGridItem(
                     size: BentoSize.tall,
@@ -121,13 +139,16 @@ class _StatCard extends StatelessWidget {
 }
 
 class _ActiveGoalsCard extends StatelessWidget {
-  const _ActiveGoalsCard({required this.onTap});
+  const _ActiveGoalsCard({required this.activeCount, required this.onTap});
 
+  final int activeCount;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final hasGoals = activeCount > 0;
+
     return BentoCard(
       onTap: onTap,
       gradient: AppColors.accentGradient,
@@ -137,19 +158,25 @@ class _ActiveGoalsCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const PillBadge(
-                  label: 'NO ACTIVE GOALS',
+                PillBadge(
+                  label: hasGoals
+                      ? '$activeCount ACTIVE ${activeCount == 1 ? 'GOAL' : 'GOALS'}'
+                      : 'NO ACTIVE GOALS',
                   color: Colors.white,
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Start your first commitment',
+                  hasGoals
+                      ? 'Keep your streak alive'
+                      : 'Start your first commitment',
                   style: textTheme.titleLarge?.copyWith(color: Colors.white),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Pick a goal, set your stake, and put your money where '
-                  'your goals are.',
+                  hasGoals
+                      ? 'Tap to see your active goals and log progress.'
+                      : 'Pick a goal, set your stake, and put your money '
+                            'where your goals are.',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: textTheme.bodyMedium?.copyWith(

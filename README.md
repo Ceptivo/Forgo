@@ -8,12 +8,12 @@ full product spec and build order.
 
 ## Status
 
-Step 1 (auth) and step 2 (wallet top-ups) of the build order are done:
-email/password auth, an 18+ age gate at signup, a profile screen, and a
-wallet with Payfast top-ups (presets + custom amount, in-app WebView
-checkout, transaction history). Goals/charity/verification are still
-placeholders. Everything is mobile-first and responsive across phone/tablet
-widths (see `lib/core/responsive/responsive.dart`).
+Steps 1–3 of the build order are done: email/password auth with an 18+ age
+gate, a wallet with Payfast top-ups, and goal creation (type selection,
+one-off vs recurring for run goals, preset/custom stake, atomic stake
+deduction on creation). Charity selection and all verification/resolution
+logic are still ahead. Everything is mobile-first and responsive across
+phone/tablet widths (see `lib/core/responsive/responsive.dart`).
 
 ## Design system
 
@@ -91,7 +91,20 @@ There's no light theme; black is the brand, not a system-preference mode.
    notify URL Payfast will call is
    `https://zfsklkcsfpygjmgwzaeb.supabase.co/functions/v1/payfast-itn`.
 
-7. Install dependencies and run:
+7. **Goals schema** — run `supabase/migrations/0003_goals.sql` the same
+   way. Adds the `goals` table and a `create_goal_with_stake` function that
+   atomically deducts the stake and creates the goal in one transaction
+   (never as two separate client calls, which could leave a goal without
+   its stake or vice versa). **This migration also closes a real gap in
+   migration 0001**: the `profiles` "update own profile" policy is a
+   row-level check with no column restriction, so any signed-in user could
+   currently set their own `wallet_balance_cents` to anything via a normal
+   client update — RLS can't express "this column but not that one" on its
+   own. 0003 adds the missing column-level `REVOKE` regardless of whether
+   you've built anything on goals yet, so **run it even if you don't care
+   about goals right now.**
+
+8. Install dependencies and run:
 
    ```
    flutter pub get
@@ -107,7 +120,8 @@ lib/
     auth/          # login/signup, 18+ age gate
     profile/       # profile screen + Supabase-backed profile repository
     wallet/        # balance card, Payfast top-up flow, transaction history
-    home/          # bottom-nav shell + dashboard + "coming soon" tab placeholders
+    goals/         # goal creation (run/weight-loss), stake, goals list
+    home/          # bottom-nav shell + dashboard
 supabase/
   migrations/      # SQL to run against the Supabase project (not auto-applied)
   functions/       # Deno Edge Functions — Payfast signing + ITN webhook (not auto-deployed)
@@ -132,9 +146,8 @@ sandbox top-up should be tried once secrets are configured.
 
 ## Next build steps
 
-Per the build plan's suggested order: goal creation flow, charity selection,
-camera-based verification capture, Claude vision verification,
-forfeiture/success logic, the founder-only flagged-submissions review queue,
-push notifications, and the Payfast withdrawal flow (pending confirmation
-Payfast supports payouts, not just collection — see the build plan's flag on
-this).
+Per the build plan's suggested order: charity selection UI, camera-based
+verification capture, Claude vision verification, forfeiture/success logic,
+the founder-only flagged-submissions review queue, push notifications, and
+the Payfast withdrawal flow (pending confirmation Payfast supports payouts,
+not just collection — see the build plan's flag on this).

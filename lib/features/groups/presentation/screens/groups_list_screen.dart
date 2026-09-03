@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/dock_clear_fab.dart';
 import '../../../social/application/social_providers.dart';
 import '../../application/goal_group_providers.dart';
 import '../../data/goal_group_repository.dart';
@@ -20,19 +21,21 @@ class GroupsListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: const Text('Groups')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final group = await showCreateOrJoinGroupSheet(context);
-          if (group != null && context.mounted) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => GroupDetailScreen(group: group),
-              ),
-            );
-          }
-        },
-        icon: const Icon(Icons.group_add_rounded),
-        label: const Text('New group'),
+      floatingActionButton: DockClearFab(
+        child: FloatingActionButton.extended(
+          onPressed: () async {
+            final group = await showCreateOrJoinGroupSheet(context);
+            if (group != null && context.mounted) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => GroupDetailScreen(group: group),
+                ),
+              );
+            }
+          },
+          icon: const Icon(Icons.group_add_rounded),
+          label: const Text('New group'),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: () async {

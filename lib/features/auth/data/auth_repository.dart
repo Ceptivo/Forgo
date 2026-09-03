@@ -13,6 +13,7 @@ class AuthRepository {
     required String email,
     required String password,
     required String fullName,
+    required String username,
     required DateTime dateOfBirth,
   }) {
     return _client.auth.signUp(
@@ -20,6 +21,7 @@ class AuthRepository {
       password: password,
       data: {
         'full_name': fullName,
+        'username': username,
         // Stored as an ISO date (yyyy-MM-dd) so the DB trigger/CHECK
         // constraint can parse it without timezone ambiguity.
         'date_of_birth': _isoDate(dateOfBirth),

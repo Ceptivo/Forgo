@@ -45,17 +45,31 @@ class UserProfileScreen extends ConsumerWidget {
                     gradient: AppColors.accentGradient,
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    stats.fullName.isNotEmpty
-                        ? stats.fullName[0].toUpperCase()
-                        : '?',
-                    style: textTheme.headlineMedium?.copyWith(
-                      color: AppColors.ink,
-                    ),
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: stats.avatarUrl != null
+                      ? ClipOval(
+                          child: Image.network(
+                            stats.avatarUrl!,
+                            width: 84,
+                            height: 84,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Text(
+                          stats.fullName.isNotEmpty
+                              ? stats.fullName[0].toUpperCase()
+                              : '?',
+                          style: textTheme.headlineMedium?.copyWith(
+                            color: AppColors.ink,
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 16),
                 Text(stats.fullName, style: textTheme.titleLarge),
+                if (stats.username != null) ...[
+                  const SizedBox(height: 2),
+                  Text('@${stats.username}', style: textTheme.bodyMedium),
+                ],
                 const SizedBox(height: 24),
                 Row(
                   children: [

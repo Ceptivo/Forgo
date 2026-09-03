@@ -23,6 +23,8 @@ class SocialRepository {
           (row) => FollowedUser(
             userId: (row as Map<String, dynamic>)['user_id'] as String,
             fullName: row['full_name'] as String,
+            username: row['username'] as String?,
+            avatarUrl: row['avatar_url'] as String?,
           ),
         )
         .toList();
@@ -35,6 +37,8 @@ class SocialRepository {
           (row) => FollowedUser(
             userId: (row as Map<String, dynamic>)['user_id'] as String,
             fullName: row['full_name'] as String,
+            username: row['username'] as String?,
+            avatarUrl: row['avatar_url'] as String?,
           ),
         )
         .toList();

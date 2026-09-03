@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
+import '../../../../core/widgets/dock_clear_fab.dart';
 import '../../../../core/widgets/retryable_error.dart';
 import '../../application/goal_providers.dart';
 import '../../domain/goal.dart';
@@ -20,12 +21,14 @@ class GoalsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Goals')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const NewGoalScreen()),
+      floatingActionButton: DockClearFab(
+        child: FloatingActionButton.extended(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const NewGoalScreen()),
+          ),
+          icon: const Icon(Icons.add),
+          label: const Text('New goal'),
         ),
-        icon: const Icon(Icons.add),
-        label: const Text('New goal'),
       ),
       body: RefreshIndicator(
         onRefresh: () async {

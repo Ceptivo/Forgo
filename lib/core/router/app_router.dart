@@ -72,6 +72,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: '/groups',
+                builder: (context, state) => const GroupsListScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: '/wallet',
                 builder: (context, state) => const WalletScreen(),
               ),
@@ -82,14 +90,6 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/profile',
                 builder: (context, state) => const ProfileScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/groups',
-                builder: (context, state) => const GroupsListScreen(),
               ),
             ],
           ),

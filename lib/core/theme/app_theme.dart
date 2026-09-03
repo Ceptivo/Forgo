@@ -139,6 +139,12 @@ class AppTheme {
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
+        // Material 3 default: the app bar tints/darkens once content has
+        // scrolled underneath it. Forgo's app bars sit flush with the
+        // page background, so that tint just reads as an unwanted grey
+        // flash rather than a deliberate elevation change.
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         centerTitle: false,
         titleTextStyle: textTheme.titleLarge,
       ),

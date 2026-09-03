@@ -37,6 +37,11 @@ class HomeShell extends StatelessWidget {
       label: 'Goals',
     ),
     _Destination(
+      icon: Icons.groups_outlined,
+      selectedIcon: Icons.groups_rounded,
+      label: 'Groups',
+    ),
+    _Destination(
       icon: Icons.account_balance_wallet_outlined,
       selectedIcon: Icons.account_balance_wallet_rounded,
       label: 'Wallet',
@@ -45,11 +50,6 @@ class HomeShell extends StatelessWidget {
       icon: Icons.person_outline,
       selectedIcon: Icons.person_rounded,
       label: 'Profile',
-    ),
-    _Destination(
-      icon: Icons.groups_outlined,
-      selectedIcon: Icons.groups_rounded,
-      label: 'Groups',
     ),
   ];
 

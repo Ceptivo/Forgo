@@ -5,6 +5,8 @@ class PublicProfileStats {
   const PublicProfileStats({
     required this.userId,
     required this.fullName,
+    required this.username,
+    required this.avatarUrl,
     required this.followerCount,
     required this.followingCount,
     required this.completedGoalsCount,
@@ -15,6 +17,8 @@ class PublicProfileStats {
     return PublicProfileStats(
       userId: userId,
       fullName: map['full_name'] as String,
+      username: map['username'] as String?,
+      avatarUrl: map['avatar_url'] as String?,
       followerCount: (map['follower_count'] as num).toInt(),
       followingCount: (map['following_count'] as num).toInt(),
       completedGoalsCount: (map['completed_goals_count'] as num).toInt(),
@@ -24,6 +28,8 @@ class PublicProfileStats {
 
   final String userId;
   final String fullName;
+  final String? username;
+  final String? avatarUrl;
   final int followerCount;
   final int followingCount;
   final int completedGoalsCount;

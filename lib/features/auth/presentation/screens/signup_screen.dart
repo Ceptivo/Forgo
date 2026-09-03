@@ -4,9 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/responsive/responsive.dart';
+import '../../../profile/application/profile_providers.dart';
 import '../../application/auth_providers.dart';
 import '../widgets/auth_error_banner.dart';
 import '../widgets/date_of_birth_field.dart';
+
+final _usernameFormat = RegExp(r'^[a-z0-9_]{3,20}$');
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -18,10 +21,12 @@ class SignupScreen extends ConsumerStatefulWidget {
 class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   DateTime? _dateOfBirth;
   String? _dobError;
+  String? _usernameError;
   bool _obscurePassword = true;
   bool _submitting = false;
   String? _errorMessage;
@@ -29,6 +34,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -50,12 +56,27 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     setState(() {
       _submitting = true;
       _errorMessage = null;
+      _usernameError = null;
     });
+
+    final username = _usernameController.text.trim().toLowerCase();
     try {
+      final available = await ref
+          .read(profileRepositoryProvider)
+          .isUsernameAvailable(username);
+      if (!available) {
+        setState(() {
+          _usernameError = 'That username is taken';
+          _submitting = false;
+        });
+        return;
+      }
+
       await ref.read(authRepositoryProvider).signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
+        username: username,
         dateOfBirth: _dateOfBirth!,
       );
       if (mounted) context.go('/home');
@@ -99,6 +120,32 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 decoration: const InputDecoration(labelText: 'Full name'),
                 validator: (value) {
                   if ((value ?? '').trim().isEmpty) return 'Enter your name';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _usernameController,
+                textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.none,
+                autocorrect: false,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  prefixText: '@',
+                  helperText: 'Lowercase letters, numbers, underscores — 3-20 characters',
+                  errorText: _usernameError,
+                ),
+                onChanged: (_) {
+                  if (_usernameError != null) {
+                    setState(() => _usernameError = null);
+                  }
+                },
+                validator: (value) {
+                  final username = (value ?? '').trim().toLowerCase();
+                  if (username.isEmpty) return 'Choose a username';
+                  if (!_usernameFormat.hasMatch(username)) {
+                    return 'Lowercase letters, numbers, underscores only';
+                  }
                   return null;
                 },
               ),

@@ -198,17 +198,25 @@ class _PersonRowState extends ConsumerState<_PersonRow> {
       ),
       leading: CircleAvatar(
         backgroundColor: AppColors.accentDim,
-        child: Text(
-          widget.person.fullName.isNotEmpty
-              ? widget.person.fullName[0].toUpperCase()
-              : '?',
-          style: const TextStyle(
-            color: AppColors.accentDeep,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        backgroundImage: widget.person.avatarUrl != null
+            ? NetworkImage(widget.person.avatarUrl!)
+            : null,
+        child: widget.person.avatarUrl != null
+            ? null
+            : Text(
+                widget.person.fullName.isNotEmpty
+                    ? widget.person.fullName[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(
+                  color: AppColors.accentDeep,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
       ),
       title: Text(widget.person.fullName, style: textTheme.titleMedium),
+      subtitle: widget.person.username != null
+          ? Text('@${widget.person.username}', style: textTheme.bodySmall)
+          : null,
       trailing: SizedBox(
         width: 110,
         child: _busy

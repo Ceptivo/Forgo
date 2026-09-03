@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
+import '../../../../core/widgets/dock_clear_fab.dart';
 import '../../../../core/widgets/retryable_error.dart';
 import '../../../goals/domain/goal.dart';
 import '../../../profile/application/profile_providers.dart';
@@ -155,6 +156,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                     );
                   },
                 ),
+                const SizedBox(height: DockClearFab.clearance),
               ],
             ),
           ),

@@ -108,6 +108,16 @@ class GoalGroupRepository {
     return url;
   }
 
+  Future<void> leaveGroup(String groupId) async {
+    try {
+      await _client
+          .rpc('leave_goal_group', params: {'p_group_id': groupId})
+          .timeout(_networkTimeout);
+    } on PostgrestException catch (e) {
+      throw GoalGroupException(e.message);
+    }
+  }
+
   Future<GoalGroup> joinGroupByCode(String inviteCode) async {
     try {
       final result = await _client

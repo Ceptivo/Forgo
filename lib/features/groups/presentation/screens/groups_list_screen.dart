@@ -127,32 +127,64 @@ class _ViewToggleBox extends StatelessWidget {
   }
 }
 
-/// There's no concept of a public/discoverable group yet — every group
-/// today is invite-code-only. This is a placeholder for that until it
-/// exists, rather than silently leaving the "Community" box asking a
-/// question the app can't answer yet.
+/// There's no general concept of public/discoverable groups yet — every
+/// group today is invite-code-only. Forgo's own community space is the
+/// one exception, shown here as a static card rather than something
+/// users create.
 class _CommunityPlaceholder extends StatelessWidget {
   const _CommunityPlaceholder();
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      child: Column(
-        children: [
-          const PillBadge(label: 'COMING SOON'),
-          const SizedBox(height: 12),
-          Text('Public groups', style: textTheme.titleLarge),
-          const SizedBox(height: 4),
-          Text(
-            "Discoverable community groups aren't here yet — for now, "
-            'start or join a group with an invite code.',
-            textAlign: TextAlign.center,
-            style: textTheme.bodyMedium,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        BentoCard(
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: AppColors.accentDim,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.groups_rounded, color: AppColors.accentDeep),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Forgo', style: textTheme.titleMedium),
+                    Text('Made for the community', style: textTheme.bodySmall),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            children: [
+              const PillBadge(label: 'MORE COMING SOON'),
+              const SizedBox(height: 12),
+              Text('Public groups', style: textTheme.titleLarge),
+              const SizedBox(height: 4),
+              Text(
+                "Discoverable community groups aren't here yet — for now, "
+                'start or join a group with an invite code.',
+                textAlign: TextAlign.center,
+                style: textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

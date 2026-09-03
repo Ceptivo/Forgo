@@ -6,12 +6,14 @@ import 'package:intl/intl.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
+import '../../../../core/widgets/dock_clear_fab.dart';
 import '../../../../core/widgets/image_crop_picker.dart';
 import '../../../../core/widgets/retryable_error.dart';
 import '../../application/goal_group_providers.dart';
 import '../../data/goal_group_repository.dart';
 import '../../domain/goal_group.dart';
 import '../../domain/goal_group_round.dart';
+import 'group_members_screen.dart';
 
 /// Replaces what used to be a single "copy invite code" tap on the (i)
 /// icon: a group's image, name, and bio (any member can edit — same
@@ -55,6 +57,7 @@ class _SettingsBodyState extends ConsumerState<_SettingsBody> {
   late final _nameController = TextEditingController(text: widget.group.name);
   late final _bioController = TextEditingController(text: widget.group.bio ?? '');
   bool _saving = false;
+  bool _leaving = false;
 
   @override
   void dispose() {
@@ -90,6 +93,50 @@ class _SettingsBodyState extends ConsumerState<_SettingsBody> {
       }
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _confirmAndLeave() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave this group?'),
+        content: const Text("You'll need a new invite to rejoin."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+            child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _leaving = true);
+    try {
+      await ref.read(goalGroupRepositoryProvider).leaveGroup(widget.group.id);
+      ref.invalidate(myGoalGroupsProvider);
+      if (mounted) {
+        // Pops both this settings screen and the group chat behind it —
+        // staying in either doesn't make sense once you're no longer a
+        // member (RLS will start denying reads for this group anyway).
+        final navigator = Navigator.of(context);
+        navigator.pop();
+        navigator.pop();
+      }
+    } on GoalGroupException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _leaving = false);
     }
   }
 
@@ -158,10 +205,27 @@ class _SettingsBodyState extends ConsumerState<_SettingsBody> {
             ),
           ),
           const SizedBox(height: 28),
+          Text('Members', style: textTheme.titleMedium),
+          const SizedBox(height: 8),
+          _MembersRow(groupId: widget.group.id),
+          const SizedBox(height: 28),
           Text('Goals', style: textTheme.titleMedium),
           const SizedBox(height: 12),
           _GroupRoundsList(groupId: widget.group.id),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
+          OutlinedButton.icon(
+            onPressed: _leaving ? null : _confirmAndLeave,
+            style: OutlinedButton.styleFrom(foregroundColor: AppColors.danger),
+            icon: _leaving
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.logout_rounded),
+            label: const Text('Leave group'),
+          ),
+          const SizedBox(height: DockClearFab.clearance),
         ],
       ),
     );
@@ -259,6 +323,40 @@ class _GroupImagePickerState extends ConsumerState<_GroupImagePicker> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MembersRow extends ConsumerWidget {
+  const _MembersRow({required this.groupId});
+
+  final String groupId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final namesAsync = ref.watch(goalGroupMemberNamesProvider(groupId));
+    final count = namesAsync.value?.length;
+    final textTheme = Theme.of(context).textTheme;
+
+    return BentoCard(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => GroupMembersScreen(groupId: groupId)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.people_alt_rounded, color: AppColors.accentDeep),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              count == null
+                  ? 'Loading members…'
+                  : '$count ${count == 1 ? 'member' : 'members'}',
+              style: textTheme.titleMedium,
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+        ],
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/dock_clear_fab.dart';
 import '../../../../core/widgets/image_crop_picker.dart';
 import '../../../../core/widgets/retryable_error.dart';
 import '../../../auth/application/auth_providers.dart';
@@ -24,7 +25,14 @@ class ProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(currentProfileProvider);
 
     return Scaffold(
+      // The app bar floats transparently over the scrolling content below
+      // it (rather than reserving its own solid strip) so the avatar and
+      // page content are visible sliding underneath it as the page
+      // scrolls, instead of a solid block sitting on top.
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text('Profile'),
         actions: [
           IconButton(
@@ -52,7 +60,11 @@ class ProfileScreen extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 8),
+                // ResponsivePage's own SafeArea already clears the status
+                // bar; this just adds the app bar's own toolbar height on
+                // top of that, since extendBodyBehindAppBar means SafeArea
+                // doesn't know to reserve space for it.
+                const SizedBox(height: kToolbarHeight + 8),
                 _AvatarPicker(profile: profile),
                 const SizedBox(height: 16),
                 Row(
@@ -118,6 +130,10 @@ class ProfileScreen extends ConsumerWidget {
                   icon: const Icon(Icons.logout),
                   label: const Text('Log out'),
                 ),
+                // Clears the floating bottom nav dock (HomeShell uses
+                // extendBody: true), which otherwise overlaps and hides
+                // whatever's last in a scrollable tab body.
+                const SizedBox(height: DockClearFab.clearance),
               ],
             );
           },

@@ -7,6 +7,16 @@ import '../../../social/application/social_providers.dart';
 import '../../../social/presentation/screens/follow_list_screen.dart';
 import '../../../streaks/application/streak_providers.dart';
 import '../../../streaks/domain/streak_badge.dart';
+import '../screens/badges_list_screen.dart';
+
+/// A darker, heavier style for the small supporting labels next to a
+/// stat (e.g. "Goals completed") — bodySmall's default muted grey reads
+/// as too light to comfortably read.
+TextStyle? _labelStyle(BuildContext context) =>
+    Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w600,
+    );
 
 /// The stat/info cards shared by a user's own profile and the profile
 /// they show to everyone else — kept as one shared set of widgets so the
@@ -32,7 +42,7 @@ class CompletedGoalsCard extends ConsumerWidget {
             style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(width: 8),
-          Text('Goals completed', style: textTheme.bodySmall),
+          Text('Goals completed', style: _labelStyle(context)),
         ],
       ),
     );
@@ -60,7 +70,7 @@ class CharityGivenCard extends ConsumerWidget {
             style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(width: 8),
-          Text('Given to charity', style: textTheme.bodySmall),
+          Text('Given to charity', style: _labelStyle(context)),
         ],
       ),
     );
@@ -95,35 +105,57 @@ class BadgesSection extends ConsumerWidget {
         _Badge(Icons.emoji_events_rounded, badge.label),
     ];
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.surfaceBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Badges',
-            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => BadgesListScreen(userId: userId)),
+        ),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.surfaceBorder),
           ),
-          const SizedBox(height: 12),
-          if (badges.isEmpty)
-            Text(
-              'Complete a goal or keep a weekly streak going to earn your '
-              'first badge.',
-              style: textTheme.bodySmall,
-            )
-          else
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [for (final badge in badges) _BadgeChip(badge: badge)],
-            ),
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Badges',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textMuted,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (badges.isEmpty)
+                Text(
+                  'Complete a goal or keep a weekly streak going to earn '
+                  'your first badge.',
+                  style: textTheme.bodySmall,
+                )
+              else
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    for (final badge in badges) _BadgeChip(badge: badge),
+                  ],
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -161,7 +193,7 @@ class _BadgeChip extends StatelessWidget {
           child: Text(
             badge.label,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
+            style: _labelStyle(context),
           ),
         ),
       ],
@@ -243,7 +275,7 @@ class _FollowStat extends StatelessWidget {
             style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 2),
-          Text(label, style: textTheme.bodySmall),
+          Text(label, style: _labelStyle(context)),
         ],
       ),
     );

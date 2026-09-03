@@ -66,12 +66,20 @@ class GoalTypeCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(title, style: textTheme.titleMedium),
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: textTheme.titleMedium,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Text(
-                          '· $subtitle',
-                          style: textTheme.bodySmall,
-                          overflow: TextOverflow.ellipsis,
+                        Flexible(
+                          child: Text(
+                            '· $subtitle',
+                            style: textTheme.bodySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),

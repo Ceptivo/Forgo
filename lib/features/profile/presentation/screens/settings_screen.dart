@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../support/presentation/screens/charities_screen.dart';
+import '../../../support/presentation/screens/feedback_form_screen.dart';
 import 'account_screen.dart';
 
-/// Settings landing screen — currently just the "Account" category, but
-/// structured as a list of categories so more (Notifications, Privacy,
-/// etc.) can be added the same way later.
+/// Settings landing screen — a list of categories so more can be added
+/// the same way later.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -22,6 +23,55 @@ class SettingsScreen extends StatelessWidget {
             subtitle: 'Username, date of birth, email',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AccountScreen()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SettingsCategoryTile(
+            icon: Icons.bug_report_outlined,
+            label: 'Report a Bug',
+            subtitle: 'Tell us what went wrong',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const FeedbackFormScreen(
+                  kind: 'bug',
+                  appBarTitle: 'Report a Bug',
+                  heading: "What's not working?",
+                  body:
+                      'The more detail, the faster we can track it down — '
+                      'what you were doing, and what happened instead.',
+                  titleLabel: 'Summary',
+                  descriptionLabel: 'What happened',
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SettingsCategoryTile(
+            icon: Icons.lightbulb_outline_rounded,
+            label: 'Suggest a Feature',
+            subtitle: 'Tell us what you want to see',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const FeedbackFormScreen(
+                  kind: 'feature',
+                  appBarTitle: 'Suggest a Feature',
+                  heading: 'What should Forgo do next?',
+                  body:
+                      'Every suggestion gets read — the most popular ones '
+                      'make it onto the shortlist people can vote on.',
+                  titleLabel: 'Feature',
+                  descriptionLabel: 'Why you want it',
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SettingsCategoryTile(
+            icon: Icons.volunteer_activism_outlined,
+            label: 'Charities we support',
+            subtitle: "Where a forfeited goal's stake goes",
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CharitiesScreen()),
             ),
           ),
         ],

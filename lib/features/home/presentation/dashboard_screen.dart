@@ -15,6 +15,7 @@ import '../../social/application/social_providers.dart';
 import '../../streaks/application/streak_providers.dart';
 import '../../streaks/domain/streak_summary.dart';
 import '../../streaks/presentation/screens/streak_heatmap_screen.dart';
+import 'about_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -43,6 +44,15 @@ class DashboardScreen extends ConsumerWidget {
     }
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'About Forgo',
+          icon: const Icon(Icons.info_outline_rounded),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AboutScreen()),
+          ),
+        ),
+      ),
       body: ResponsivePage(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

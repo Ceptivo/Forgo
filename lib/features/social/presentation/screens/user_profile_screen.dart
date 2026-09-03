@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/dock_clear_fab.dart';
 import '../../../../core/widgets/retryable_error.dart';
 import '../../../auth/application/auth_providers.dart';
 import '../../../profile/presentation/widgets/profile_stat_cards.dart';
@@ -26,7 +27,12 @@ class UserProfileScreen extends ConsumerWidget {
     final isSelf = ref.watch(currentUserProvider)?.id == userId;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Profile'),
+      ),
       body: statsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -41,7 +47,7 @@ class UserProfileScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 8),
+                const SizedBox(height: kToolbarHeight + 8),
                 Center(
                   child: Container(
                     width: 84,
@@ -100,6 +106,7 @@ class UserProfileScreen extends ConsumerWidget {
                 BadgesSection(userId: userId),
                 const SizedBox(height: 12),
                 if (!isSelf) _FollowButton(userId: userId, stats: stats),
+                const SizedBox(height: DockClearFab.clearance),
               ],
             ),
           );

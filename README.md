@@ -9,11 +9,13 @@ full product spec and build order.
 ## Status
 
 Steps 1–3 of the build order are done: email/password auth with an 18+ age
-gate, a wallet with Payfast top-ups, and goal creation (type selection,
-one-off vs recurring for run goals, preset/custom stake, atomic stake
-deduction on creation). Charity selection and all verification/resolution
-logic are still ahead. Everything is mobile-first and responsive across
-phone/tablet widths (see `lib/core/responsive/responsive.dart`).
+gate, a wallet with Payfast top-ups, and goal creation (distance goals —
+run, walk, cycle, or swim, each verified the same way via screenshot — or
+weight-loss; one-off vs recurring for distance goals; preset/custom stake;
+atomic stake deduction on creation). Charity selection and all
+verification/resolution logic are still ahead. Everything is mobile-first
+and responsive across phone/tablet widths (see
+`lib/core/responsive/responsive.dart`).
 
 ## Design system
 

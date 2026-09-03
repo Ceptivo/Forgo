@@ -21,18 +21,20 @@ class GoalRepository {
   /// the goal, via the create_goal_with_stake Postgres function — never as
   /// two separate client calls, which could leave a goal without its
   /// stake (or vice versa) if one step failed.
-  Future<Goal> createRunGoal({
+  Future<Goal> createDistanceGoal({
     required int stakeCents,
     required double distanceKm,
-    required RunCadence cadence,
+    required DistanceCadence cadence,
+    required DistanceActivity activity,
     DateTime? deadline,
   }) async {
     return _createGoal(
-      type: GoalType.run,
+      type: GoalType.distance,
       stakeCents: stakeCents,
       deadline: deadline,
-      runDistanceKm: distanceKm,
-      runCadence: cadence,
+      distanceKm: distanceKm,
+      distanceCadence: cadence,
+      distanceActivity: activity,
     );
   }
 
@@ -53,8 +55,9 @@ class GoalRepository {
     required GoalType type,
     required int stakeCents,
     DateTime? deadline,
-    double? runDistanceKm,
-    RunCadence? runCadence,
+    double? distanceKm,
+    DistanceCadence? distanceCadence,
+    DistanceActivity? distanceActivity,
     double? weightLossTargetKg,
   }) async {
     try {
@@ -66,10 +69,13 @@ class GoalRepository {
           'p_deadline': deadline == null
               ? null
               : DateFormat('yyyy-MM-dd').format(deadline),
-          'p_run_distance_km': runDistanceKm,
-          'p_run_cadence': runCadence == null
+          'p_distance_km': distanceKm,
+          'p_distance_cadence': distanceCadence == null
               ? null
-              : runCadenceToString(runCadence),
+              : distanceCadenceToString(distanceCadence),
+          'p_distance_activity': distanceActivity == null
+              ? null
+              : distanceActivityToString(distanceActivity),
           'p_weight_loss_target_kg': weightLossTargetKg,
         },
       );

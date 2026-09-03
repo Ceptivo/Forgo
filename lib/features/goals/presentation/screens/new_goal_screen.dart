@@ -12,6 +12,13 @@ import '../../domain/goal.dart';
 import '../widgets/goal_type_card.dart';
 import '../widgets/stake_amount_field.dart';
 
+const _distanceActivityIcons = {
+  DistanceActivity.run: Icons.directions_run_rounded,
+  DistanceActivity.walk: Icons.directions_walk_rounded,
+  DistanceActivity.cycle: Icons.directions_bike_rounded,
+  DistanceActivity.swim: Icons.pool_rounded,
+};
+
 class NewGoalScreen extends ConsumerStatefulWidget {
   const NewGoalScreen({super.key});
 
@@ -23,7 +30,8 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
   GoalType? _type;
 
   final _distanceController = TextEditingController();
-  RunCadence _cadence = RunCadence.once;
+  DistanceCadence _cadence = DistanceCadence.once;
+  DistanceActivity _activity = DistanceActivity.run;
 
   final _targetKgController = TextEditingController();
 
@@ -54,10 +62,10 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
 
   bool get _canSubmit {
     if (_stakeCents == null) return false;
-    if (_type == GoalType.run) {
+    if (_type == GoalType.distance) {
       final distance = double.tryParse(_distanceController.text.trim());
       if (distance == null || distance <= 0) return false;
-      return _cadence == RunCadence.weekly || _deadline != null;
+      return _cadence == DistanceCadence.weekly || _deadline != null;
     }
     if (_type == GoalType.weightLoss) {
       final target = double.tryParse(_targetKgController.text.trim());
@@ -75,12 +83,13 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
 
     try {
       final repository = ref.read(goalRepositoryProvider);
-      if (_type == GoalType.run) {
-        await repository.createRunGoal(
+      if (_type == GoalType.distance) {
+        await repository.createDistanceGoal(
           stakeCents: _stakeCents!,
           distanceKm: double.parse(_distanceController.text.trim()),
           cadence: _cadence,
-          deadline: _cadence == RunCadence.once ? _deadline : null,
+          activity: _activity,
+          deadline: _cadence == DistanceCadence.once ? _deadline : null,
         );
       } else {
         await repository.createWeightLossGoal(
@@ -120,11 +129,11 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
                 Expanded(
                   child: GoalTypeCard(
                     icon: Icons.directions_run_rounded,
-                    title: 'Run',
+                    title: 'Distance',
                     subtitle: 'Verified via screenshot',
-                    selected: _type == GoalType.run,
+                    selected: _type == GoalType.distance,
                     onTap: () => setState(() {
-                      _type = GoalType.run;
+                      _type = GoalType.distance;
                       _deadline = null;
                     }),
                   ),
@@ -144,8 +153,23 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
                 ),
               ],
             ),
-            if (_type == GoalType.run) ...[
+            if (_type == GoalType.distance) ...[
               const SizedBox(height: 24),
+              Text('Activity', style: textTheme.titleMedium),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final activity in DistanceActivity.values)
+                    _ActivityChip(
+                      activity: activity,
+                      selected: _activity == activity,
+                      onTap: () => setState(() => _activity = activity),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
               Text('Distance', style: textTheme.titleMedium),
               const SizedBox(height: 12),
               TextField(
@@ -162,14 +186,14 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
               const SizedBox(height: 16),
               Text('How often', style: textTheme.titleMedium),
               const SizedBox(height: 12),
-              SegmentedButton<RunCadence>(
+              SegmentedButton<DistanceCadence>(
                 segments: const [
                   ButtonSegment(
-                    value: RunCadence.once,
+                    value: DistanceCadence.once,
                     label: Text('Once'),
                   ),
                   ButtonSegment(
-                    value: RunCadence.weekly,
+                    value: DistanceCadence.weekly,
                     label: Text('Every week'),
                   ),
                 ],
@@ -177,7 +201,7 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
                 onSelectionChanged: (selection) =>
                     setState(() => _cadence = selection.first),
               ),
-              if (_cadence == RunCadence.once) ...[
+              if (_cadence == DistanceCadence.once) ...[
                 const SizedBox(height: 16),
                 _DeadlinePicker(deadline: _deadline, onTap: _pickDeadline),
               ],
@@ -241,6 +265,54 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
                     : const Text('Stake and start'),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActivityChip extends StatelessWidget {
+  const _ActivityChip({
+    required this.activity,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final DistanceActivity activity;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accentDim : AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected ? AppColors.accent : AppColors.surfaceBorder,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _distanceActivityIcons[activity],
+              size: 18,
+              color: selected ? AppColors.accentBright : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              distanceActivityLabel(activity),
+              style: TextStyle(
+                color: selected ? AppColors.accentBright : AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
       ),

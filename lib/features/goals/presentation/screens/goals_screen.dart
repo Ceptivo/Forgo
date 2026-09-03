@@ -84,6 +84,19 @@ class GoalsScreen extends ConsumerWidget {
   }
 }
 
+const _distanceActivityIcons = {
+  DistanceActivity.run: Icons.directions_run_rounded,
+  DistanceActivity.walk: Icons.directions_walk_rounded,
+  DistanceActivity.cycle: Icons.directions_bike_rounded,
+  DistanceActivity.swim: Icons.pool_rounded,
+};
+
+IconData _goalIcon(Goal goal) {
+  if (goal.type == GoalType.weightLoss) return Icons.monitor_weight_outlined;
+  return _distanceActivityIcons[goal.distanceActivity] ??
+      Icons.directions_run_rounded;
+}
+
 class _GoalCard extends StatelessWidget {
   const _GoalCard({required this.goal});
 
@@ -111,12 +124,7 @@ class _GoalCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  goal.type == GoalType.run
-                      ? Icons.directions_run_rounded
-                      : Icons.monitor_weight_outlined,
-                  color: AppColors.accentBright,
-                ),
+                Icon(_goalIcon(goal), color: AppColors.accentBright),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(goal.title, style: textTheme.titleMedium),

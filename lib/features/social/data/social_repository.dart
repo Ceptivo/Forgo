@@ -32,6 +32,28 @@ class SocialRepository {
 
   Future<List<FollowedUser>> fetchFollowing() async {
     final rows = await _client.rpc('get_following').timeout(_networkTimeout);
+    return _parseFollowedUsers(rows);
+  }
+
+  /// Who follows [userId] — any profile, not just the caller's own, so
+  /// this can back the "Followers" list from any profile screen.
+  Future<List<FollowedUser>> fetchFollowers(String userId) async {
+    final rows = await _client
+        .rpc('get_followers', params: {'p_user_id': userId})
+        .timeout(_networkTimeout);
+    return _parseFollowedUsers(rows);
+  }
+
+  /// Who [userId] follows — any profile, not just the caller's own, so
+  /// this can back the "Following" list from any profile screen.
+  Future<List<FollowedUser>> fetchFollowees(String userId) async {
+    final rows = await _client
+        .rpc('get_followees', params: {'p_user_id': userId})
+        .timeout(_networkTimeout);
+    return _parseFollowedUsers(rows);
+  }
+
+  List<FollowedUser> _parseFollowedUsers(Object? rows) {
     return (rows as List)
         .map(
           (row) => FollowedUser(

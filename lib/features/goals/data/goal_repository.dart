@@ -74,6 +74,37 @@ class GoalRepository {
     );
   }
 
+  /// Self-reports progress on a distance/time goal — still no automated
+  /// verification anywhere in the app (see create_goal_with_stake above),
+  /// so this is the user's own word that they did it. Logs an activity
+  /// check-in (feeding the streak heatmap) and, for a one-off ('once')
+  /// goal, also completes it and refunds the stake; a recurring
+  /// ('weekly') goal just extends the streak and stays active, since it
+  /// has no fixed end date.
+  Future<Goal> logGoalProgress(String goalId) async {
+    try {
+      final result = await _client
+          .rpc('log_goal_progress', params: {'p_goal_id': goalId})
+          .timeout(_networkTimeout);
+      return Goal.fromMap(result as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw GoalException(e.message);
+    }
+  }
+
+  /// Self-reported completion for a weight-loss goal — no activity to
+  /// log (nothing for the streak heatmap), just the stake refund.
+  Future<Goal> completeWeightLossGoal(String goalId) async {
+    try {
+      final result = await _client
+          .rpc('complete_weight_loss_goal', params: {'p_goal_id': goalId})
+          .timeout(_networkTimeout);
+      return Goal.fromMap(result as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw GoalException(e.message);
+    }
+  }
+
   Future<Goal> _createGoal({
     required GoalType type,
     required int stakeCents,

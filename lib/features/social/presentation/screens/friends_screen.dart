@@ -3,11 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/retryable_error.dart';
 import '../../application/social_providers.dart';
-import '../../domain/followed_user.dart';
-import 'user_profile_screen.dart';
+import '../widgets/person_row.dart';
 
 /// Search for other users and follow them, or browse who you already
 /// follow — the entry point for "add friends to a group chat" later.
@@ -95,13 +93,18 @@ class _FollowingList extends ConsumerWidget {
           itemCount: following.length,
           separatorBuilder: (_, _) => const SizedBox(height: 4),
           itemBuilder: (context, index) =>
-              _PersonRow(person: following[index], following: true),
+              PersonRow(person: following[index], following: true),
         );
       },
     );
   }
 }
 
+/// Watches [searchResultsProvider], keyed by the query text — unlike a
+/// `FutureBuilder` with its future built inline, this doesn't restart
+/// (and flash back to loading) every time something unrelated in the
+/// tree rebuilds, which used to make results flicker on and off and be
+/// impossible to tap.
 class _SearchResults extends ConsumerWidget {
   const _SearchResults({required this.query});
 
@@ -109,16 +112,18 @@ class _SearchResults extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<List<FollowedUser>>(
-      future: ref.read(socialRepositoryProvider).searchProfiles(query),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return const Center(child: Text('Could not search right now.'));
-        }
-        final results = snapshot.data ?? const [];
+    final resultsAsync = ref.watch(searchResultsProvider(query));
+    final followingAsync = ref.watch(followingProvider);
+    final followingIds =
+        followingAsync.value?.map((f) => f.userId).toSet() ?? const {};
+
+    return resultsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => RetryableError(
+        message: 'Could not search right now.',
+        onRetry: () => ref.invalidate(searchResultsProvider(query)),
+      ),
+      data: (results) {
         if (results.isEmpty) {
           return Center(
             child: Text(
@@ -127,118 +132,15 @@ class _SearchResults extends ConsumerWidget {
             ),
           );
         }
-        final followingAsync = ref.watch(followingProvider);
-        final followingIds = followingAsync.value
-            ?.map((f) => f.userId)
-            .toSet() ?? const {};
         return ListView.separated(
           itemCount: results.length,
           separatorBuilder: (_, _) => const SizedBox(height: 4),
-          itemBuilder: (context, index) => _PersonRow(
+          itemBuilder: (context, index) => PersonRow(
             person: results[index],
             following: followingIds.contains(results[index].userId),
           ),
         );
       },
-    );
-  }
-}
-
-class _PersonRow extends ConsumerStatefulWidget {
-  const _PersonRow({required this.person, required this.following});
-
-  final FollowedUser person;
-  final bool following;
-
-  @override
-  ConsumerState<_PersonRow> createState() => _PersonRowState();
-}
-
-class _PersonRowState extends ConsumerState<_PersonRow> {
-  bool? _optimisticFollowing;
-  bool _busy = false;
-
-  Future<void> _toggle() async {
-    final nowFollowing = !(_optimisticFollowing ?? widget.following);
-    setState(() {
-      _optimisticFollowing = nowFollowing;
-      _busy = true;
-    });
-    try {
-      final repo = ref.read(socialRepositoryProvider);
-      if (nowFollowing) {
-        await repo.followUser(widget.person.userId);
-      } else {
-        await repo.unfollowUser(widget.person.userId);
-      }
-      ref.invalidate(followingProvider);
-    } catch (_) {
-      if (mounted) {
-        setState(() => _optimisticFollowing = !nowFollowing);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not update — try again.')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final following = _optimisticFollowing ?? widget.following;
-    final textTheme = Theme.of(context).textTheme;
-
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => UserProfileScreen(userId: widget.person.userId),
-        ),
-      ),
-      leading: CircleAvatar(
-        backgroundColor: AppColors.accentDim,
-        backgroundImage: widget.person.avatarUrl != null
-            ? NetworkImage(widget.person.avatarUrl!)
-            : null,
-        child: widget.person.avatarUrl != null
-            ? null
-            : Text(
-                widget.person.fullName.isNotEmpty
-                    ? widget.person.fullName[0].toUpperCase()
-                    : '?',
-                style: const TextStyle(
-                  color: AppColors.accentDeep,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-      ),
-      title: Text(widget.person.fullName, style: textTheme.titleMedium),
-      subtitle: widget.person.username != null
-          ? Text('@${widget.person.username}', style: textTheme.bodySmall)
-          : null,
-      trailing: SizedBox(
-        width: 110,
-        child: _busy
-            ? const Center(
-                child: SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              )
-            : following
-            ? OutlinedButton(
-                onPressed: _toggle,
-                style: OutlinedButton.styleFrom(minimumSize: const Size(0, 36)),
-                child: const Text('Following'),
-              )
-            : ElevatedButton(
-                onPressed: _toggle,
-                style: ElevatedButton.styleFrom(minimumSize: const Size(0, 36)),
-                child: const Text('Follow'),
-              ),
-      ),
     );
   }
 }

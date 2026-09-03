@@ -1,6 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../goals/domain/goal.dart';
 import '../domain/activity_check_in.dart';
 import '../domain/streak_summary.dart';
 
@@ -44,28 +43,6 @@ class StreakRepository {
         .order('logged_date')
         .timeout(_networkTimeout);
     return rows.map(ActivityCheckIn.fromMap).toList();
-  }
-
-  Future<void> logCheckIn({
-    required String userId,
-    required DistanceActivity activity,
-    DateTime? date,
-  }) async {
-    try {
-      await _client
-          .from('activity_check_ins')
-          .insert({
-            'user_id': userId,
-            'activity': distanceActivityToString(activity),
-            'logged_date': _isoDate(date ?? DateTime.now()),
-          })
-          .timeout(_networkTimeout);
-    } on PostgrestException catch (e) {
-      // Unique violation = already logged this activity today; treat as
-      // a no-op success rather than an error the user has to dismiss.
-      if (e.code == '23505') return;
-      rethrow;
-    }
   }
 
   String _isoDate(DateTime date) {

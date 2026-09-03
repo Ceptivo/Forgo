@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
 import '../../domain/goal.dart';
+import '../screens/goal_detail_screen.dart';
 
 const goalActivityIcons = {
   DistanceActivity.run: Icons.directions_run_rounded,
@@ -19,7 +20,9 @@ IconData goalIcon(Goal goal) {
 
 /// A single goal's card — icon, title, status pill, and a detail line
 /// (deadline/cadence + stake). Shared between the full Goals list and the
-/// dashboard's "Your goals" preview.
+/// dashboard's "Your goals" preview. Tapping it opens the goal's own page
+/// (GoalDetailScreen) rather than expanding inline, which stops working
+/// once there are more than a couple of goals in the list.
 class GoalCard extends StatelessWidget {
   const GoalCard({super.key, required this.goal});
 
@@ -40,6 +43,9 @@ class GoalCard extends StatelessWidget {
         : 'Weekly commitment';
 
     return BentoCard(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => GoalDetailScreen(goal: goal)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

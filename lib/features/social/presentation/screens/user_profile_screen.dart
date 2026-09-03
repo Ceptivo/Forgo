@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/retryable_error.dart';
-import '../../../../core/widgets/stat_display.dart';
 import '../../../auth/application/auth_providers.dart';
-import '../../../streaks/application/streak_providers.dart';
-import '../../../streaks/domain/streak_badge.dart';
+import '../../../profile/presentation/widgets/profile_stat_cards.dart';
 import '../../application/social_providers.dart';
 import '../../domain/public_profile_stats.dart';
 
-/// Another user's public profile — name, follower/following/completed-
-/// goals stats, and a Follow/Following button. Reached from a friend
-/// search result or a group's member list.
+/// Another user's public profile. Deliberately mirrors ProfileScreen's
+/// layout section-for-section (avatar, name, follow stats, completed
+/// goals, given to charity, badges) so a profile looks the same whoever
+/// is looking at it — the only differences are the things that only make
+/// sense for your *own* account: no pencil to edit the name, no settings
+/// gear, and the Find friends/Log out buttons are replaced by Follow.
 class UserProfileScreen extends ConsumerWidget {
   const UserProfileScreen({super.key, required this.userId});
 
@@ -35,152 +37,68 @@ class UserProfileScreen extends ConsumerWidget {
         ),
         data: (stats) {
           final textTheme = Theme.of(context).textTheme;
-          return Padding(
-            padding: const EdgeInsets.all(24),
+          return ResponsivePage(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  width: 84,
-                  height: 84,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.accentGradient,
+                const SizedBox(height: 8),
+                Center(
+                  child: Container(
+                    width: 84,
+                    height: 84,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: AppColors.accentGradient,
+                    ),
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.antiAlias,
+                    child: stats.avatarUrl != null
+                        ? ClipOval(
+                            child: Image.network(
+                              stats.avatarUrl!,
+                              width: 84,
+                              height: 84,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Text(
+                            stats.fullName.isNotEmpty
+                                ? stats.fullName[0].toUpperCase()
+                                : '?',
+                            style: textTheme.headlineMedium?.copyWith(
+                              color: AppColors.ink,
+                            ),
+                          ),
                   ),
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.antiAlias,
-                  child: stats.avatarUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            stats.avatarUrl!,
-                            width: 84,
-                            height: 84,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : Text(
-                          stats.fullName.isNotEmpty
-                              ? stats.fullName[0].toUpperCase()
-                              : '?',
-                          style: textTheme.headlineMedium?.copyWith(
-                            color: AppColors.ink,
-                          ),
-                        ),
                 ),
                 const SizedBox(height: 16),
-                Text(stats.fullName, style: textTheme.titleLarge),
-                if (stats.username != null) ...[
-                  const SizedBox(height: 2),
-                  Text('@${stats.username}', style: textTheme.bodyMedium),
-                ],
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _Stat(label: 'Followers', value: stats.followerCount),
-                    ),
-                    Expanded(
-                      child: _Stat(label: 'Following', value: stats.followingCount),
-                    ),
-                    Expanded(
-                      child: _Stat(
-                        label: 'Goals completed',
-                        value: stats.completedGoalsCount,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _UserBadgesRow(userId: userId),
-                const SizedBox(height: 20),
-                if (!isSelf)
-                  SizedBox(
-                    width: double.infinity,
-                    child: _FollowButton(userId: userId, stats: stats),
+                Center(
+                  child: Text(
+                    stats.fullName,
+                    style: textTheme.titleLarge,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                   ),
+                ),
+                if (stats.username != null)
+                  Center(
+                    child: Text('@${stats.username}', style: textTheme.bodyMedium),
+                  ),
+                const SizedBox(height: 20),
+                FollowStatsRow(userId: userId),
+                const SizedBox(height: 12),
+                CompletedGoalsCard(userId: userId),
+                const SizedBox(height: 12),
+                CharityGivenCard(userId: userId),
+                const SizedBox(height: 12),
+                BadgesSection(userId: userId),
+                const SizedBox(height: 12),
+                if (!isSelf) _FollowButton(userId: userId, stats: stats),
               ],
             ),
           );
         },
       ),
-    );
-  }
-}
-
-/// Streak-milestone badges this user has earned, shown so friends and
-/// followers can see what they've accomplished. Stays hidden entirely
-/// when there's nothing earned yet — this is a third-person view, so
-/// there's no "keep going" encouragement copy to fall back on.
-class _UserBadgesRow extends ConsumerWidget {
-  const _UserBadgesRow({required this.userId});
-
-  final String userId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final summaryAsync = ref.watch(streakSummaryProvider(userId));
-    final earned = earnedStreakBadges(summaryAsync.value?.longestWeeklyStreak ?? 0);
-    if (earned.isEmpty) return const SizedBox.shrink();
-
-    return Wrap(
-      spacing: 16,
-      runSpacing: 12,
-      alignment: WrapAlignment.center,
-      children: [for (final badge in earned) _UserBadgeChip(badge: badge)],
-    );
-  }
-}
-
-class _UserBadgeChip extends StatelessWidget {
-  const _UserBadgeChip({required this.badge});
-
-  final StreakBadge badge;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: const BoxDecoration(
-            color: AppColors.ink,
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: const Icon(
-            Icons.emoji_events_rounded,
-            color: AppColors.accent,
-            size: 24,
-          ),
-        ),
-        const SizedBox(height: 6),
-        SizedBox(
-          width: 68,
-          child: Text(
-            badge.label,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({required this.label, required this.value});
-
-  final String label;
-  final int value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        StatNumber(value: '$value', fontSize: 26),
-        const SizedBox(height: 4),
-        Text(label, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
-      ],
     );
   }
 }
@@ -241,14 +159,17 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
         ),
       );
     }
-    return following
-        ? OutlinedButton(
-            onPressed: () => _toggle(true),
-            child: const Text('Following'),
-          )
-        : ElevatedButton(
-            onPressed: () => _toggle(false),
-            child: const Text('Follow'),
-          );
+    return SizedBox(
+      width: double.infinity,
+      child: following
+          ? OutlinedButton(
+              onPressed: () => _toggle(true),
+              child: const Text('Following'),
+            )
+          : ElevatedButton(
+              onPressed: () => _toggle(false),
+              child: const Text('Follow'),
+            ),
+    );
   }
 }

@@ -11,16 +11,12 @@ import '../../application/streak_providers.dart';
 import '../../domain/activity_check_in.dart';
 import '../../domain/streak_badge.dart';
 
-const _activityLabels = {
-  DistanceActivity.run: 'Run',
-  DistanceActivity.walk: 'Walk',
-  DistanceActivity.cycle: 'Cycle',
-  DistanceActivity.swim: 'Swim',
-};
-
 /// Tapped from the dashboard's streak widget — current streaks, a
 /// week-by-week check-in heatmap, and progress toward the 12/26/52-week
-/// streak badges (see streak_badge.dart).
+/// streak badges (see streak_badge.dart). Every day on here comes from
+/// completing a goal (see log_goal_progress / complete_weight_loss_goal
+/// in 0012_goal_driven_streaks.sql) — there's no free-standing "log an
+/// activity" action any more, so this screen is read-only.
 class StreakHeatmapScreen extends ConsumerWidget {
   const StreakHeatmapScreen({super.key});
 
@@ -67,8 +63,12 @@ class _StreakBody extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _LogTodaySection(userId: userId),
-            const SizedBox(height: 24),
+            Text(
+              'Complete a goal to add today to your streak — this is '
+              'built from your goals, not logged separately.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -142,83 +142,6 @@ class _StreakStat extends StatelessWidget {
           const SizedBox(height: 10),
           Text(value, style: textTheme.headlineSmall),
           Text(label, style: textTheme.bodySmall),
-        ],
-      ),
-    );
-  }
-}
-
-class _LogTodaySection extends ConsumerStatefulWidget {
-  const _LogTodaySection({required this.userId});
-
-  final String userId;
-
-  @override
-  ConsumerState<_LogTodaySection> createState() => _LogTodaySectionState();
-}
-
-class _LogTodaySectionState extends ConsumerState<_LogTodaySection> {
-  bool _busy = false;
-
-  Future<void> _log(DistanceActivity activity) async {
-    setState(() => _busy = true);
-    try {
-      await ref
-          .read(streakRepositoryProvider)
-          .logCheckIn(userId: widget.userId, activity: activity);
-      ref.invalidate(streakSummaryProvider(widget.userId));
-      ref.invalidate(checkInHistoryProvider(widget.userId));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Logged ${_activityLabels[activity]!.toLowerCase()} for today')),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not log that — try again.')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.surfaceBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Log today\'s activity', style: textTheme.titleMedium),
-          const SizedBox(height: 12),
-          _busy
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                )
-              : Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    for (final activity in DistanceActivity.values)
-                      OutlinedButton.icon(
-                        onPressed: () => _log(activity),
-                        icon: Icon(goalActivityIcons[activity], size: 18),
-                        label: Text(_activityLabels[activity]!),
-                        style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
-                      ),
-                  ],
-                ),
         ],
       ),
     );

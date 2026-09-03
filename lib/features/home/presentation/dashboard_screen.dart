@@ -28,15 +28,13 @@ class DashboardScreen extends ConsumerWidget {
     final profile = profileAsync.value;
     final firstName = profile?.fullName.split(' ').first;
     final activeGoalsCount =
-        goalsAsync.value
-            ?.where((g) => g.status == GoalStatus.active)
-            .length ??
+        goalsAsync.value?.where((g) => g.status == GoalStatus.active).length ??
         0;
     final hasError = profileAsync.hasError || goalsAsync.hasError;
 
-    void openNewGoal() => Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const NewGoalScreen()),
-    );
+    void openNewGoal() => Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const NewGoalScreen()));
 
     void retry() {
       ref.invalidate(currentProfileProvider);
@@ -44,85 +42,98 @@ class DashboardScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'About Forgo',
-          icon: const Icon(Icons.info_outline_rounded),
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AboutScreen()),
-          ),
-        ),
-      ),
-      body: ResponsivePage(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 8),
-            Text(
-              firstName == null ? 'Welcome to Forgo' : 'Hey, $firstName',
-              style: textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Stake money, prove it with a photo, keep it.',
-              style: textTheme.bodyMedium,
-            ),
-            if (hasError)
-              RetryableError(message: 'Could not load your data.', onRetry: retry),
-            const SizedBox(height: 24),
-            _ActiveGoalsCard(
-              activeCount: activeGoalsCount,
-              onTap: activeGoalsCount == 0
-                  ? openNewGoal
-                  : () => context.go('/goals'),
-            ),
-            const SizedBox(height: 12),
-            BentoGrid(
-              items: [
-                BentoGridItem(
-                  size: BentoSize.half,
-                  child: _StatCard(
-                    icon: Icons.account_balance_wallet_rounded,
-                    label: 'Wallet',
-                    value: 'R${(profile?.walletBalanceRand ?? 0).toStringAsFixed(0)}',
-                    onTap: () => context.go('/wallet'),
-                  ),
-                ),
-                BentoGridItem(
-                  size: BentoSize.half,
-                  child: profile == null
-                      ? const _StatCard(
-                          icon: Icons.volunteer_activism_rounded,
-                          label: 'Given to charity',
-                          value: '—',
-                        )
-                      : _CharityStatCard(userId: profile.id),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (profile != null) _StreakSection(userId: profile.id),
-            const SizedBox(height: 24),
-            Row(
+      // No app bar — that pushed the greeting down from where it used to
+      // sit. The info icon instead floats over the top-right corner of
+      // the original layout, which stays exactly where it was.
+      body: Stack(
+        children: [
+          ResponsivePage(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Your goals', style: textTheme.titleMedium),
-                const Spacer(),
-                if (activeGoalsCount > 0)
-                  TextButton(
-                    onPressed: () => context.go('/goals'),
-                    child: const Text('See all'),
+                const SizedBox(height: 8),
+                Text(
+                  firstName == null ? 'Welcome to Forgo' : 'Hey, $firstName',
+                  style: textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Stake money, prove it with a photo, keep it.',
+                  style: textTheme.bodyMedium,
+                ),
+                if (hasError)
+                  RetryableError(
+                    message: 'Could not load your data.',
+                    onRetry: retry,
                   ),
+                const SizedBox(height: 24),
+                _ActiveGoalsCard(
+                  activeCount: activeGoalsCount,
+                  onTap: activeGoalsCount == 0
+                      ? openNewGoal
+                      : () => context.go('/goals'),
+                ),
+                const SizedBox(height: 12),
+                BentoGrid(
+                  items: [
+                    BentoGridItem(
+                      size: BentoSize.half,
+                      child: _StatCard(
+                        icon: Icons.account_balance_wallet_rounded,
+                        label: 'Wallet',
+                        value:
+                            'R${(profile?.walletBalanceRand ?? 0).toStringAsFixed(0)}',
+                        onTap: () => context.go('/wallet'),
+                      ),
+                    ),
+                    BentoGridItem(
+                      size: BentoSize.half,
+                      child: profile == null
+                          ? const _StatCard(
+                              icon: Icons.volunteer_activism_rounded,
+                              label: 'Given to charity',
+                              value: '—',
+                            )
+                          : _CharityStatCard(userId: profile.id),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (profile != null) _StreakSection(userId: profile.id),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Text('Your goals', style: textTheme.titleMedium),
+                    const Spacer(),
+                    if (activeGoalsCount > 0)
+                      TextButton(
+                        onPressed: () => context.go('/goals'),
+                        child: const Text('See all'),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _GoalListPreview(
+                  goals: goalsAsync.value ?? const [],
+                  loading: goalsAsync.isLoading,
+                  onNewGoal: openNewGoal,
+                ),
+                const SizedBox(height: 24),
               ],
             ),
-            const SizedBox(height: 12),
-            _GoalListPreview(
-              goals: goalsAsync.value ?? const [],
-              loading: goalsAsync.isLoading,
-              onNewGoal: openNewGoal,
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 12,
+            child: IconButton(
+              tooltip: 'About Forgo',
+              icon: const Icon(Icons.info_outline_rounded),
+              onPressed: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const AboutScreen())),
             ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -259,9 +270,9 @@ class _StreakSection extends ConsumerWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const StreakHeatmapScreen()),
-        ),
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const StreakHeatmapScreen())),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(18),
@@ -275,10 +286,8 @@ class _StreakSection extends ConsumerWidget {
               height: 76,
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             ),
-            error: (_, _) => Text(
-              'Could not load your streak.',
-              style: textTheme.bodySmall,
-            ),
+            error: (_, _) =>
+                Text('Could not load your streak.', style: textTheme.bodySmall),
             data: (summary) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,7 +317,8 @@ class _StreakSection extends ConsumerWidget {
                     children: [
                       for (final day in summary.last7Days) ...[
                         Expanded(child: _StreakDay(day: day)),
-                        if (day != summary.last7Days.last) const SizedBox(width: 6),
+                        if (day != summary.last7Days.last)
+                          const SizedBox(width: 6),
                       ],
                     ],
                   ),
@@ -335,18 +345,19 @@ class _StreakDay extends StatelessWidget {
 
     return Column(
       children: [
-        Text(
-          letter,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        Text(letter, style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 6),
         Container(
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: day.activity != null ? AppColors.accentDim : AppColors.surfaceMuted,
+            color: day.activity != null
+                ? AppColors.accentDim
+                : AppColors.surfaceMuted,
             shape: BoxShape.circle,
-            border: isToday ? Border.all(color: AppColors.ink, width: 1.5) : null,
+            border: isToday
+                ? Border.all(color: AppColors.ink, width: 1.5)
+                : null,
           ),
           alignment: Alignment.center,
           child: day.activity == null
@@ -406,7 +417,10 @@ class _GoalListPreview extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('New goal', style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'New goal',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   Text(
                     'Distance, time, or weight-loss — choose your stake',
                     maxLines: 1,

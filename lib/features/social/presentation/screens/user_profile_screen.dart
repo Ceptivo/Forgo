@@ -75,14 +75,20 @@ class UserProfileScreen extends ConsumerWidget {
                 Center(
                   child: Text(
                     stats.fullName,
-                    style: textTheme.titleLarge,
+                    style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                   ),
                 ),
                 if (stats.username != null)
                   Center(
-                    child: Text('@${stats.username}', style: textTheme.bodyMedium),
+                    child: Text(
+                      '@${stats.username}',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 const SizedBox(height: 20),
                 FollowStatsRow(userId: userId),

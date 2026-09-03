@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../goals/domain/goal.dart';
 import '../domain/wallet_transaction.dart';
 
 class TopUpRequest {
@@ -48,7 +49,32 @@ class WalletRepository {
         .order('created_at', ascending: false)
         .limit(50)
         .timeout(_networkTimeout);
-    return rows.map(WalletTransaction.fromMap).toList();
+
+    final goalIds = rows
+        .map((row) => row['goal_id'] as String?)
+        .whereType<String>()
+        .toSet();
+
+    var goalsById = const <String, Goal>{};
+    if (goalIds.isNotEmpty) {
+      final goalRows = await _client
+          .from('goals')
+          .select()
+          .inFilter('id', goalIds.toList())
+          .timeout(_networkTimeout);
+      goalsById = {
+        for (final goal in goalRows.map(Goal.fromMap)) goal.id: goal,
+      };
+    }
+
+    return rows
+        .map(
+          (row) => WalletTransaction.fromMap(
+            row,
+            goal: goalsById[row['goal_id']],
+          ),
+        )
+        .toList();
   }
 }
 

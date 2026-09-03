@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../profile/application/profile_providers.dart';
+import '../../../wallet/application/wallet_providers.dart';
 import '../../application/goal_providers.dart';
 import '../../data/goal_repository.dart';
 import '../../domain/goal.dart';
@@ -118,6 +119,7 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
 
       ref.invalidate(goalsProvider);
       ref.invalidate(currentProfileProvider);
+      ref.invalidate(walletTransactionsProvider);
       if (mounted) context.pop();
     } on GoalException catch (e) {
       setState(() => _error = e.message);

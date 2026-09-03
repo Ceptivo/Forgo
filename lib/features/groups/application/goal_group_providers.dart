@@ -30,6 +30,15 @@ final myGoalGroupInvitesProvider =
       return ref.watch(goalGroupRepositoryProvider).watchMyInvites();
     });
 
+/// A single group's live row — name/bio/image can change after the
+/// GoalGroup a screen was pushed with was fetched, so anywhere that
+/// displays or edits those should watch this rather than trust a
+/// possibly-stale constructor value.
+final goalGroupByIdProvider = FutureProvider.autoDispose
+    .family<GoalGroup, String>((ref, groupId) {
+      return ref.watch(goalGroupRepositoryProvider).fetchGroup(groupId);
+    });
+
 final goalGroupRoundsProvider = FutureProvider.autoDispose
     .family<List<GoalGroupRound>, String>((ref, groupId) {
       return ref.watch(goalGroupRepositoryProvider).fetchRounds(groupId);

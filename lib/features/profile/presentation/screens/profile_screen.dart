@@ -1,12 +1,9 @@
-import 'dart:typed_data';
-
-import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/image_crop_picker.dart';
 import '../../../../core/widgets/retryable_error.dart';
 import '../../../auth/application/auth_providers.dart';
 import '../../../social/presentation/screens/friends_screen.dart';
@@ -15,8 +12,9 @@ import '../../domain/profile.dart';
 import '../widgets/profile_stat_cards.dart';
 import 'settings_screen.dart';
 
-/// Gap (2) + pencil IconButton width (22) — see the name/pencil Row below.
-const _pencilSlotWidth = 24.0;
+/// Gap (4) + pencil tap target (4 padding + 15 icon + 4 padding = 23) — see
+/// the name/pencil Row below.
+const _pencilSlotWidth = 27.0;
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -68,22 +66,23 @@ class ProfileScreen extends ConsumerWidget {
                     Flexible(
                       child: Text(
                         profile.fullName,
-                        style: Theme.of(context).textTheme.titleLarge,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(width: 2),
-                    // Tight padding/constraints rather than the default
-                    // 48x48 tap target — IconButton's usual hit area is
-                    // asymmetric relative to the name text next to it and
-                    // visibly pushes the name off-center otherwise.
-                    IconButton(
-                      onPressed: () => showNicknameEditDialog(context, ref, profile),
-                      icon: const Icon(Icons.edit_rounded, size: 16),
-                      tooltip: 'Edit nickname',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+                    const SizedBox(width: 4),
+                    // A bare tap target rather than IconButton — IconButton's
+                    // minimum 48x48 hit area (even constrained down) still
+                    // pads the pencil further from the name than wanted.
+                    GestureDetector(
+                      onTap: () => showNicknameEditDialog(context, ref, profile),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(Icons.edit_rounded, size: 15),
+                      ),
                     ),
                   ],
                 ),
@@ -91,7 +90,10 @@ class ProfileScreen extends ConsumerWidget {
                   Center(
                     child: Text(
                       '@${profile.username}',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 const SizedBox(height: 20),
@@ -204,23 +206,7 @@ class _AvatarPickerState extends ConsumerState<_AvatarPicker> {
   bool _uploading = false;
 
   Future<void> _pick() async {
-    final picked = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      // No maxWidth/maxHeight here — the crop step needs the original
-      // resolution to crop from; downscaling happens after, on the
-      // already-cropped result.
-      imageQuality: 90,
-    );
-    if (picked == null || !mounted) return;
-
-    final originalBytes = await picked.readAsBytes();
-    if (!mounted) return;
-    final cropped = await Navigator.of(context).push<Uint8List>(
-      MaterialPageRoute(
-        builder: (_) => _CropAvatarScreen(imageBytes: originalBytes),
-        fullscreenDialog: true,
-      ),
-    );
+    final cropped = await pickAndCropCircularImage(context);
     if (cropped == null || !mounted) return;
 
     setState(() => _uploading = true);
@@ -306,78 +292,6 @@ class _AvatarPickerState extends ConsumerState<_AvatarPicker> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Full-screen circular crop step shown between picking a gallery photo
-/// and uploading it — pops with the cropped PNG bytes, or null if the
-/// user backs out.
-class _CropAvatarScreen extends StatefulWidget {
-  const _CropAvatarScreen({required this.imageBytes});
-
-  final Uint8List imageBytes;
-
-  @override
-  State<_CropAvatarScreen> createState() => _CropAvatarScreenState();
-}
-
-class _CropAvatarScreenState extends State<_CropAvatarScreen> {
-  final _controller = CropController();
-  bool _cropping = false;
-
-  void _onCropped(CropResult result) {
-    switch (result) {
-      case CropSuccess(:final croppedImage):
-        Navigator.of(context).pop(croppedImage);
-      case CropFailure():
-        setState(() => _cropping = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not crop that photo — try again.')),
-        );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: const Text('Crop photo'),
-        actions: [
-          TextButton(
-            onPressed: _cropping
-                ? null
-                : () {
-                    setState(() => _cropping = true);
-                    _controller.cropCircle();
-                  },
-            child: const Text(
-              'Done',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          Crop(
-            image: widget.imageBytes,
-            controller: _controller,
-            withCircleUi: true,
-            baseColor: Colors.black,
-            maskColor: Colors.black.withValues(alpha: 0.75),
-            onCropped: _onCropped,
-          ),
-          if (_cropping)
-            const ColoredBox(
-              color: Colors.black38,
-              child: Center(child: CircularProgressIndicator(color: Colors.white)),
-            ),
-        ],
       ),
     );
   }

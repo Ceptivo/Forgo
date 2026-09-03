@@ -277,7 +277,7 @@ class _StreakSection extends ConsumerWidget {
                     children: [
                       const Icon(
                         Icons.local_fire_department_rounded,
-                        color: AppColors.warning,
+                        color: AppColors.ink,
                       ),
                       const SizedBox(width: 8),
                       Text(

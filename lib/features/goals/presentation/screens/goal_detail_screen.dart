@@ -4,7 +4,10 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
+import '../../../auth/application/auth_providers.dart';
+import '../../../social/application/social_providers.dart';
 import '../../../streaks/application/streak_providers.dart';
+import '../../../wallet/application/wallet_providers.dart';
 import '../../application/goal_providers.dart';
 import '../../data/goal_repository.dart';
 import '../../domain/goal.dart';
@@ -37,6 +40,10 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
           .logGoalProgress(_goal.id);
       ref.invalidate(goalsProvider);
       ref.invalidate(streakSummaryProvider);
+      ref.invalidate(checkInHistoryProvider);
+      ref.invalidate(walletTransactionsProvider);
+      final userId = ref.read(currentUserProvider)?.id;
+      if (userId != null) ref.invalidate(publicProfileStatsProvider(userId));
       if (!mounted) return;
       setState(() => _goal = updated);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -88,6 +95,9 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
           .read(goalRepositoryProvider)
           .completeWeightLossGoal(_goal.id);
       ref.invalidate(goalsProvider);
+      ref.invalidate(walletTransactionsProvider);
+      final userId = ref.read(currentUserProvider)?.id;
+      if (userId != null) ref.invalidate(publicProfileStatsProvider(userId));
       if (!mounted) return;
       setState(() => _goal = updated);
       ScaffoldMessenger.of(context).showSnackBar(

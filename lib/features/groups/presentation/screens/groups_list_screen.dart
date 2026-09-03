@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/bento_grid.dart';
 import '../../../../core/widgets/dock_clear_fab.dart';
 import '../../../social/application/social_providers.dart';
 import '../../application/goal_group_providers.dart';
@@ -12,13 +13,22 @@ import '../widgets/create_or_join_group_sheet.dart';
 import 'group_detail_screen.dart';
 import 'groups_tab.dart';
 
+enum _GroupsView { mine, community }
+
 /// Its own bottom-nav destination — Group Chat Goals, kept separate from
 /// the solo Goals tab rather than nested inside it.
-class GroupsListScreen extends ConsumerWidget {
+class GroupsListScreen extends ConsumerStatefulWidget {
   const GroupsListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GroupsListScreen> createState() => _GroupsListScreenState();
+}
+
+class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
+  _GroupsView _view = _GroupsView.mine;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Groups')),
       floatingActionButton: DockClearFab(
@@ -45,9 +55,103 @@ class GroupsListScreen extends ConsumerWidget {
         child: ResponsivePage(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: const [_PendingInvites(), GroupsTab()],
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _ViewToggleBox(
+                      label: 'My Groups',
+                      selected: _view == _GroupsView.mine,
+                      onTap: () => setState(() => _view = _GroupsView.mine),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _ViewToggleBox(
+                      label: 'Community',
+                      selected: _view == _GroupsView.community,
+                      onTap: () =>
+                          setState(() => _view = _GroupsView.community),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              if (_view == _GroupsView.mine) ...[
+                const _PendingInvites(),
+                const GroupsTab(),
+              ] else
+                const _CommunityPlaceholder(),
+            ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ViewToggleBox extends StatelessWidget {
+  const _ViewToggleBox({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.ink : AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected ? AppColors.ink : AppColors.surfaceBorder,
+          ),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: selected ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// There's no concept of a public/discoverable group yet — every group
+/// today is invite-code-only. This is a placeholder for that until it
+/// exists, rather than silently leaving the "Community" box asking a
+/// question the app can't answer yet.
+class _CommunityPlaceholder extends StatelessWidget {
+  const _CommunityPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Column(
+        children: [
+          const PillBadge(label: 'COMING SOON'),
+          const SizedBox(height: 12),
+          Text('Public groups', style: textTheme.titleLarge),
+          const SizedBox(height: 4),
+          Text(
+            "Discoverable community groups aren't here yet — for now, "
+            'start or join a group with an invite code.',
+            textAlign: TextAlign.center,
+            style: textTheme.bodyMedium,
+          ),
+        ],
       ),
     );
   }

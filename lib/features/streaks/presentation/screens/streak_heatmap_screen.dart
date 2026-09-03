@@ -138,7 +138,7 @@ class _StreakStat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.warning),
+          Icon(icon, color: AppColors.ink),
           const SizedBox(height: 10),
           Text(value, style: textTheme.headlineSmall),
           Text(label, style: textTheme.bodySmall),

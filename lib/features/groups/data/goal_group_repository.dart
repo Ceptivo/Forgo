@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -38,6 +40,72 @@ class GoalGroupRepository {
     } on PostgrestException catch (e) {
       throw GoalGroupException(e.message);
     }
+  }
+
+  /// A single group's current row — used to keep GroupDetailScreen/
+  /// GroupSettingsScreen showing live name/bio/image rather than the
+  /// possibly-stale GoalGroup a caller was constructed with.
+  Future<GoalGroup> fetchGroup(String groupId) async {
+    final row = await _client
+        .from('goal_groups')
+        .select()
+        .eq('id', groupId)
+        .single()
+        .timeout(_networkTimeout);
+    return GoalGroup.fromMap(row);
+  }
+
+  Future<GoalGroup> updateGroup({
+    required String groupId,
+    String? name,
+    String? bio,
+    String? imageUrl,
+  }) async {
+    try {
+      final result = await _client
+          .rpc(
+            'update_goal_group',
+            params: {
+              'p_group_id': groupId,
+              'p_name': name,
+              'p_bio': bio,
+              'p_image_url': imageUrl,
+            },
+          )
+          .timeout(_networkTimeout);
+      return GoalGroup.fromMap(result as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw GoalGroupException(e.message);
+    }
+  }
+
+  /// Same folder-per-group + cache-busted pattern as
+  /// ProfileRepository.uploadAvatar, just keyed by group id instead of
+  /// user id and gated by group membership instead of an exact
+  /// auth.uid() match (see the group_images storage policies).
+  Future<String> uploadGroupImage({
+    required String groupId,
+    required Uint8List bytes,
+    required String fileExtension,
+  }) async {
+    final path = '$groupId/image.$fileExtension';
+    await _client.storage
+        .from('group_images')
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(
+            upsert: true,
+            contentType: 'image/$fileExtension',
+          ),
+        )
+        .timeout(_networkTimeout);
+
+    final url =
+        '${_client.storage.from('group_images').getPublicUrl(path)}?t=${DateTime.now().millisecondsSinceEpoch}';
+
+    await updateGroup(groupId: groupId, imageUrl: url);
+    return url;
   }
 
   Future<GoalGroup> joinGroupByCode(String inviteCode) async {

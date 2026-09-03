@@ -42,7 +42,7 @@ class _InviteFriendSheet extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Invite a friend', style: Theme.of(context).textTheme.headlineSmall),
+          Text('Add a friend', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
           Text(
             'They\'ll need to accept before joining.',

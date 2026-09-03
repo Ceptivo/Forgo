@@ -27,7 +27,10 @@ class CompletedGoalsCard extends ConsumerWidget {
         children: [
           const Icon(Icons.flag_rounded, color: AppColors.accentDeep),
           const SizedBox(width: 12),
-          Text(completed?.toString() ?? '—', style: textTheme.titleLarge),
+          Text(
+            completed?.toString() ?? '—',
+            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
           const SizedBox(width: 8),
           Text('Goals completed', style: textTheme.bodySmall),
         ],
@@ -54,7 +57,7 @@ class CharityGivenCard extends ConsumerWidget {
           const SizedBox(width: 12),
           Text(
             givenRand == null ? '—' : 'R${givenRand.toStringAsFixed(2)}',
-            style: textTheme.titleLarge,
+            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(width: 8),
           Text('Given to charity', style: textTheme.bodySmall),
@@ -65,9 +68,9 @@ class CharityGivenCard extends ConsumerWidget {
 }
 
 /// Every badge a user has earned — the streak milestones (12/26/52
-/// weeks) plus "1st Goal Accomplished" the moment their completed-goals
-/// count reaches one. All still just a trophy icon + label for now, so
-/// this stays a single flat list rather than modelling badge "kinds".
+/// weeks, a trophy — reserved for streak-shaped badges) plus "1st Goal
+/// Accomplished" (a medal, distinct from the trophy) the moment their
+/// completed-goals count reaches one.
 class BadgesSection extends ConsumerWidget {
   const BadgesSection({super.key, required this.userId});
 
@@ -83,13 +86,13 @@ class BadgesSection extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final labels = <String>[
+    final badges = <_Badge>[
       if ((statsAsync.value?.completedGoalsCount ?? 0) >= 1)
-        '1st Goal Accomplished',
+        const _Badge(Icons.military_tech_rounded, '1st Goal Accomplished'),
       for (final badge in earnedStreakBadges(
         streakAsync.value?.longestWeeklyStreak ?? 0,
       ))
-        badge.label,
+        _Badge(Icons.emoji_events_rounded, badge.label),
     ];
 
     return Container(
@@ -103,9 +106,12 @@ class BadgesSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Badges', style: textTheme.titleMedium),
+          Text(
+            'Badges',
+            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 12),
-          if (labels.isEmpty)
+          if (badges.isEmpty)
             Text(
               'Complete a goal or keep a weekly streak going to earn your '
               'first badge.',
@@ -115,7 +121,7 @@ class BadgesSection extends ConsumerWidget {
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              children: [for (final label in labels) _BadgeChip(label: label)],
+              children: [for (final badge in badges) _BadgeChip(badge: badge)],
             ),
         ],
       ),
@@ -123,10 +129,17 @@ class BadgesSection extends ConsumerWidget {
   }
 }
 
-class _BadgeChip extends StatelessWidget {
-  const _BadgeChip({required this.label});
+class _Badge {
+  const _Badge(this.icon, this.label);
 
+  final IconData icon;
   final String label;
+}
+
+class _BadgeChip extends StatelessWidget {
+  const _BadgeChip({required this.badge});
+
+  final _Badge badge;
 
   @override
   Widget build(BuildContext context) {
@@ -140,17 +153,13 @@ class _BadgeChip extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
-          child: const Icon(
-            Icons.emoji_events_rounded,
-            color: AppColors.accent,
-            size: 26,
-          ),
+          child: Icon(badge.icon, color: AppColors.accent, size: 26),
         ),
         const SizedBox(height: 6),
         SizedBox(
           width: 70,
           child: Text(
-            label,
+            badge.label,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall,
           ),
@@ -229,7 +238,10 @@ class _FollowStat extends StatelessWidget {
       onTap: onTap,
       child: Column(
         children: [
-          Text(value?.toString() ?? '—', style: textTheme.titleLarge),
+          Text(
+            value?.toString() ?? '—',
+            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 2),
           Text(label, style: textTheme.bodySmall),
         ],

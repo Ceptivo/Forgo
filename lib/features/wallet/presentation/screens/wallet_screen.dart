@@ -6,6 +6,7 @@ import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
 import '../../../../core/widgets/retryable_error.dart';
+import '../../../goals/domain/goal.dart';
 import '../../../profile/application/profile_providers.dart';
 import '../../application/wallet_providers.dart';
 import '../../domain/wallet_transaction.dart';
@@ -141,7 +142,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 24),
                         child: Text(
-                          'No top-ups yet.',
+                          'No transactions yet.',
                           style: textTheme.bodyMedium,
                         ),
                       );
@@ -169,30 +170,86 @@ class _TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final (icon, color, label) = switch (transaction.status) {
-      WalletTransactionStatus.completed => (
-        Icons.check_circle_rounded,
-        AppColors.success,
-        'Completed',
-      ),
-      WalletTransactionStatus.pending => (
-        Icons.schedule_rounded,
-        AppColors.warning,
-        'Pending',
-      ),
-      WalletTransactionStatus.failed => (
-        Icons.error_rounded,
-        AppColors.danger,
-        'Failed',
-      ),
-      WalletTransactionStatus.cancelled => (
-        Icons.cancel_rounded,
-        AppColors.textMuted,
-        'Cancelled',
-      ),
-    };
+    switch (transaction.type) {
+      case WalletTransactionType.goalStake:
+        return _tile(
+          context,
+          icon: Icons.flag_rounded,
+          color: AppColors.danger,
+          title: _stakeDescription(transaction.goal),
+          amountText: '-R${transaction.amountRand.toStringAsFixed(2)}',
+          amountColor: AppColors.danger,
+          subtitle: DateFormat.yMMMd().add_jm().format(transaction.createdAt),
+        );
+      case WalletTransactionType.goalRefund:
+        return _tile(
+          context,
+          icon: Icons.emoji_events_rounded,
+          color: AppColors.success,
+          title: _refundDescription(transaction.goal, transaction.createdAt),
+          amountText: '+R${transaction.amountRand.toStringAsFixed(2)}',
+          amountColor: AppColors.success,
+          subtitle: DateFormat.yMMMd().add_jm().format(transaction.createdAt),
+        );
+      case WalletTransactionType.topup:
+        final (icon, color, label) = switch (transaction.status) {
+          WalletTransactionStatus.completed => (
+            Icons.check_circle_rounded,
+            AppColors.success,
+            'Completed',
+          ),
+          WalletTransactionStatus.pending => (
+            Icons.schedule_rounded,
+            AppColors.warning,
+            'Pending',
+          ),
+          WalletTransactionStatus.failed => (
+            Icons.error_rounded,
+            AppColors.danger,
+            'Failed',
+          ),
+          WalletTransactionStatus.cancelled => (
+            Icons.cancel_rounded,
+            AppColors.textMuted,
+            'Cancelled',
+          ),
+        };
+        return _tile(
+          context,
+          icon: icon,
+          color: color,
+          title: 'Top-up · R${transaction.amountRand.toStringAsFixed(2)}',
+          subtitle:
+              '$label · ${DateFormat.yMMMd().add_jm().format(transaction.createdAt)}',
+        );
+    }
+  }
 
+  String _stakeDescription(Goal? goal) {
+    if (goal == null) return 'Goal | stake';
+    final title = goal.title;
+    if (goal.deadline != null) {
+      return 'Goal | $title by ${DateFormat.yMMMd().format(goal.deadline!)}';
+    }
+    return 'Goal | $title · Weekly commitment';
+  }
+
+  String _refundDescription(Goal? goal, DateTime completedAt) {
+    final when = DateFormat.yMMMd().format(completedAt);
+    if (goal == null) return 'Goal Achieved | $when';
+    return 'Goal Achieved | ${goal.title} on $when';
+  }
+
+  Widget _tile(
+    BuildContext context, {
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    String? amountText,
+    Color? amountColor,
+  }) {
+    final textTheme = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: BentoCard(
@@ -205,17 +262,21 @@ class _TransactionTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Top-up · R${transaction.amountRand.toStringAsFixed(2)}',
-                    style: textTheme.titleMedium,
-                  ),
-                  Text(
-                    '$label · ${DateFormat.yMMMd().add_jm().format(transaction.createdAt)}',
-                    style: textTheme.bodySmall,
-                  ),
+                  Text(title, style: textTheme.titleMedium),
+                  Text(subtitle, style: textTheme.bodySmall),
                 ],
               ),
             ),
+            if (amountText != null) ...[
+              const SizedBox(width: 8),
+              Text(
+                amountText,
+                style: textTheme.titleMedium?.copyWith(
+                  color: amountColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ],
         ),
       ),

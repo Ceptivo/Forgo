@@ -5,6 +5,8 @@ class GoalGroup {
     required this.inviteCode,
     required this.createdBy,
     required this.createdAt,
+    this.bio,
+    this.imageUrl,
   });
 
   factory GoalGroup.fromMap(Map<String, dynamic> map) {
@@ -14,6 +16,8 @@ class GoalGroup {
       inviteCode: map['invite_code'] as String,
       createdBy: map['created_by'] as String,
       createdAt: DateTime.parse(map['created_at'] as String),
+      bio: map['bio'] as String?,
+      imageUrl: map['image_url'] as String?,
     );
   }
 
@@ -22,4 +26,6 @@ class GoalGroup {
   final String inviteCode;
   final String createdBy;
   final DateTime createdAt;
+  final String? bio;
+  final String? imageUrl;
 }

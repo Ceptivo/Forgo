@@ -57,6 +57,23 @@ class GoalRepository {
     );
   }
 
+  Future<Goal> createTimeGoal({
+    required int stakeCents,
+    required int timeMinutes,
+    required DistanceCadence cadence,
+    required DistanceActivity activity,
+    DateTime? deadline,
+  }) async {
+    return _createGoal(
+      type: GoalType.time,
+      stakeCents: stakeCents,
+      deadline: deadline,
+      distanceCadence: cadence,
+      distanceActivity: activity,
+      timeMinutes: timeMinutes,
+    );
+  }
+
   Future<Goal> _createGoal({
     required GoalType type,
     required int stakeCents,
@@ -65,6 +82,7 @@ class GoalRepository {
     DistanceCadence? distanceCadence,
     DistanceActivity? distanceActivity,
     double? weightLossTargetKg,
+    int? timeMinutes,
   }) async {
     try {
       final result = await _client.rpc(
@@ -83,6 +101,7 @@ class GoalRepository {
               ? null
               : distanceActivityToString(distanceActivity),
           'p_weight_loss_target_kg': weightLossTargetKg,
+          'p_time_minutes': timeMinutes,
         },
       ).timeout(_networkTimeout);
       return Goal.fromMap(result as Map<String, dynamic>);

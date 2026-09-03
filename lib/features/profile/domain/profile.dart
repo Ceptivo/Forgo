@@ -4,6 +4,7 @@ class Profile {
     required this.email,
     required this.fullName,
     required this.username,
+    required this.usernameChangedAt,
     required this.avatarUrl,
     required this.dateOfBirth,
     required this.walletBalanceCents,
@@ -16,6 +17,9 @@ class Profile {
       email: map['email'] as String? ?? '',
       fullName: map['full_name'] as String? ?? '',
       username: map['username'] as String? ?? '',
+      usernameChangedAt: map['username_changed_at'] == null
+          ? null
+          : DateTime.parse(map['username_changed_at'] as String),
       avatarUrl: map['avatar_url'] as String?,
       dateOfBirth: DateTime.parse(map['date_of_birth'] as String),
       walletBalanceCents: (map['wallet_balance_cents'] as num?)?.toInt() ?? 0,
@@ -27,6 +31,7 @@ class Profile {
   final String email;
   final String fullName;
   final String username;
+  final DateTime? usernameChangedAt;
   final String? avatarUrl;
   final DateTime dateOfBirth;
   final int walletBalanceCents;

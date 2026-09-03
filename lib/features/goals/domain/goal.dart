@@ -1,4 +1,4 @@
-enum GoalType { distance, weightLoss }
+enum GoalType { distance, weightLoss, time }
 
 enum GoalStatus { active, completed, failed, cancelled }
 
@@ -10,11 +10,17 @@ enum DistanceCadence { once, weekly }
 /// than four separate goal types.
 enum DistanceActivity { run, walk, cycle, swim }
 
-GoalType goalTypeFromString(String value) =>
-    value == 'weight_loss' ? GoalType.weightLoss : GoalType.distance;
+GoalType goalTypeFromString(String value) => switch (value) {
+  'weight_loss' => GoalType.weightLoss,
+  'time' => GoalType.time,
+  _ => GoalType.distance,
+};
 
-String goalTypeToString(GoalType type) =>
-    type == GoalType.weightLoss ? 'weight_loss' : 'distance';
+String goalTypeToString(GoalType type) => switch (type) {
+  GoalType.weightLoss => 'weight_loss',
+  GoalType.time => 'time',
+  GoalType.distance => 'distance',
+};
 
 DistanceCadence? distanceCadenceFromString(String? value) => switch (value) {
   'weekly' => DistanceCadence.weekly,
@@ -66,6 +72,7 @@ class Goal {
     this.distanceCadence,
     this.distanceActivity,
     this.weightLossTargetKg,
+    this.timeMinutes,
     this.deadline,
   });
 
@@ -87,6 +94,7 @@ class Goal {
         map['distance_activity'] as String?,
       ),
       weightLossTargetKg: (map['weight_loss_target_kg'] as num?)?.toDouble(),
+      timeMinutes: (map['time_minutes'] as num?)?.toInt(),
       deadline: map['deadline'] == null
           ? null
           : DateTime.parse(map['deadline'] as String),
@@ -102,23 +110,41 @@ class Goal {
   final DistanceCadence? distanceCadence;
   final DistanceActivity? distanceActivity;
   final double? weightLossTargetKg;
+  final int? timeMinutes;
   final DateTime? deadline;
 
   double get stakeRand => stakeCents / 100;
 
   String get title {
-    if (type == GoalType.distance) {
-      final distance = distanceKm?.toStringAsFixed(
-        distanceKm! % 1 == 0 ? 0 : 1,
-      );
-      final verb = distanceActivityVerb(distanceActivity ?? DistanceActivity.run);
-      return distanceCadence == DistanceCadence.weekly
-          ? '$verb ${distance}km per week'
-          : '$verb ${distance}km';
+    switch (type) {
+      case GoalType.distance:
+        final distance = distanceKm?.toStringAsFixed(
+          distanceKm! % 1 == 0 ? 0 : 1,
+        );
+        final verb = distanceActivityVerb(distanceActivity ?? DistanceActivity.run);
+        return distanceCadence == DistanceCadence.weekly
+            ? '$verb ${distance}km per week'
+            : '$verb ${distance}km';
+      case GoalType.time:
+        final verb = distanceActivityVerb(distanceActivity ?? DistanceActivity.run);
+        final duration = formatGoalDuration(timeMinutes ?? 0);
+        return distanceCadence == DistanceCadence.weekly
+            ? '$verb for $duration per week'
+            : '$verb for $duration';
+      case GoalType.weightLoss:
+        final target = weightLossTargetKg?.toStringAsFixed(
+          weightLossTargetKg! % 1 == 0 ? 0 : 1,
+        );
+        return 'Lose ${target}kg';
     }
-    final target = weightLossTargetKg?.toStringAsFixed(
-      weightLossTargetKg! % 1 == 0 ? 0 : 1,
-    );
-    return 'Lose ${target}kg';
   }
+}
+
+/// Formats a minute count the way a person would say it — "20 min",
+/// "1 hour", "1.5 hours" — rather than always "90 min".
+String formatGoalDuration(int minutes) {
+  if (minutes < 60) return '$minutes min';
+  final hours = minutes / 60;
+  final rounded = hours % 1 == 0 ? hours.toStringAsFixed(0) : hours.toStringAsFixed(1);
+  return '$rounded ${hours == 1 ? 'hour' : 'hours'}';
 }

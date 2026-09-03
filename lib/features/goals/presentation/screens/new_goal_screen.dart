@@ -35,6 +35,8 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
 
   final _targetKgController = TextEditingController();
 
+  final _timeMinutesController = TextEditingController();
+
   DateTime? _deadline;
   int? _stakeCents;
 
@@ -45,6 +47,7 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
   void dispose() {
     _distanceController.dispose();
     _targetKgController.dispose();
+    _timeMinutesController.dispose();
     super.dispose();
   }
 
@@ -67,6 +70,11 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
       if (distance == null || distance <= 0) return false;
       return _cadence == DistanceCadence.weekly || _deadline != null;
     }
+    if (_type == GoalType.time) {
+      final minutes = int.tryParse(_timeMinutesController.text.trim());
+      if (minutes == null || minutes <= 0) return false;
+      return _cadence == DistanceCadence.weekly || _deadline != null;
+    }
     if (_type == GoalType.weightLoss) {
       final target = double.tryParse(_targetKgController.text.trim());
       return target != null && target > 0 && _deadline != null;
@@ -83,20 +91,29 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
 
     try {
       final repository = ref.read(goalRepositoryProvider);
-      if (_type == GoalType.distance) {
-        await repository.createDistanceGoal(
-          stakeCents: _stakeCents!,
-          distanceKm: double.parse(_distanceController.text.trim()),
-          cadence: _cadence,
-          activity: _activity,
-          deadline: _cadence == DistanceCadence.once ? _deadline : null,
-        );
-      } else {
-        await repository.createWeightLossGoal(
-          stakeCents: _stakeCents!,
-          targetKg: double.parse(_targetKgController.text.trim()),
-          deadline: _deadline!,
-        );
+      switch (_type!) {
+        case GoalType.distance:
+          await repository.createDistanceGoal(
+            stakeCents: _stakeCents!,
+            distanceKm: double.parse(_distanceController.text.trim()),
+            cadence: _cadence,
+            activity: _activity,
+            deadline: _cadence == DistanceCadence.once ? _deadline : null,
+          );
+        case GoalType.time:
+          await repository.createTimeGoal(
+            stakeCents: _stakeCents!,
+            timeMinutes: int.parse(_timeMinutesController.text.trim()),
+            cadence: _cadence,
+            activity: _activity,
+            deadline: _cadence == DistanceCadence.once ? _deadline : null,
+          );
+        case GoalType.weightLoss:
+          await repository.createWeightLossGoal(
+            stakeCents: _stakeCents!,
+            targetKg: double.parse(_targetKgController.text.trim()),
+            deadline: _deadline!,
+          );
       }
 
       ref.invalidate(goalsProvider);
@@ -138,7 +155,20 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
                     }),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: GoalTypeCard(
+                    icon: Icons.timer_outlined,
+                    title: 'Time',
+                    subtitle: 'Verified via screenshot',
+                    selected: _type == GoalType.time,
+                    onTap: () => setState(() {
+                      _type = GoalType.time;
+                      _deadline = null;
+                    }),
+                  ),
+                ),
+                const SizedBox(width: 10),
                 Expanded(
                   child: GoalTypeCard(
                     icon: Icons.monitor_weight_outlined,
@@ -180,6 +210,57 @@ class _NewGoalScreenState extends ConsumerState<NewGoalScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Distance (km)',
                   suffixText: 'km',
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 16),
+              Text('How often', style: textTheme.titleMedium),
+              const SizedBox(height: 12),
+              SegmentedButton<DistanceCadence>(
+                segments: const [
+                  ButtonSegment(
+                    value: DistanceCadence.once,
+                    label: Text('Once'),
+                  ),
+                  ButtonSegment(
+                    value: DistanceCadence.weekly,
+                    label: Text('Every week'),
+                  ),
+                ],
+                selected: {_cadence},
+                onSelectionChanged: (selection) =>
+                    setState(() => _cadence = selection.first),
+              ),
+              if (_cadence == DistanceCadence.once) ...[
+                const SizedBox(height: 16),
+                _DeadlinePicker(deadline: _deadline, onTap: _pickDeadline),
+              ],
+            ],
+            if (_type == GoalType.time) ...[
+              const SizedBox(height: 24),
+              Text('Activity', style: textTheme.titleMedium),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final activity in DistanceActivity.values)
+                    _ActivityChip(
+                      activity: activity,
+                      selected: _activity == activity,
+                      onTap: () => setState(() => _activity = activity),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text('Duration', style: textTheme.titleMedium),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _timeMinutesController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Duration (minutes)',
+                  suffixText: 'min',
                 ),
                 onChanged: (_) => setState(() {}),
               ),

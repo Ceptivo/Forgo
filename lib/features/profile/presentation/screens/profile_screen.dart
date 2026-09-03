@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,6 +14,7 @@ import '../../../social/application/social_providers.dart';
 import '../../../social/presentation/screens/friends_screen.dart';
 import '../../application/profile_providers.dart';
 import '../../domain/profile.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -20,7 +24,18 @@ class ProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(currentProfileProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: const Text('Profile'),
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+          ),
+        ],
+      ),
       body: ResponsivePage(
         child: profileAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -50,11 +65,17 @@ class ProfileScreen extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 4),
+                    // Tight padding/constraints rather than the default
+                    // 48x48 tap target — IconButton's usual hit area is
+                    // asymmetric relative to the name text next to it and
+                    // visibly pushes the name off-center otherwise.
                     IconButton(
-                      onPressed: () => _showNicknameEditor(context, ref, profile),
-                      icon: const Icon(Icons.edit_rounded, size: 18),
+                      onPressed: () => showNicknameEditDialog(context, ref, profile),
+                      icon: const Icon(Icons.edit_rounded, size: 16),
                       tooltip: 'Edit nickname',
-                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                     ),
                   ],
                 ),
@@ -69,6 +90,8 @@ class ProfileScreen extends ConsumerWidget {
                 _FollowStatsRow(userId: profile.id),
                 const SizedBox(height: 12),
                 _CompletedGoalsCard(userId: profile.id),
+                const SizedBox(height: 12),
+                _CharityGivenCard(userId: profile.id),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: () => Navigator.of(context).push(
@@ -92,18 +115,53 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-Future<void> _showNicknameEditor(
+Future<void> showNicknameEditDialog(
   BuildContext context,
   WidgetRef ref,
   Profile profile,
 ) async {
-  final controller = TextEditingController(text: profile.fullName);
   final result = await showDialog<String>(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (context) => _NicknameEditDialog(initialValue: profile.fullName),
+  );
+
+  if (result == null || result.isEmpty || result == profile.fullName) return;
+
+  await ref.read(profileRepositoryProvider).updateFullName(profile.id, result);
+  ref.invalidate(currentProfileProvider);
+}
+
+/// A dedicated StatefulWidget so the [TextEditingController] is created and
+/// disposed by the widget that actually owns the [TextField] using it.
+/// Creating the controller outside `showDialog` and disposing it right
+/// after the awaited Future completes is racy: the dialog route's closing
+/// transition can still be running (and the TextField still attached)
+/// when that dispose() call fires, which throws
+/// `'_dependents.isEmpty': is not true` from the framework.
+class _NicknameEditDialog extends StatefulWidget {
+  const _NicknameEditDialog({required this.initialValue});
+
+  final String initialValue;
+
+  @override
+  State<_NicknameEditDialog> createState() => _NicknameEditDialogState();
+}
+
+class _NicknameEditDialogState extends State<_NicknameEditDialog> {
+  late final _controller = TextEditingController(text: widget.initialValue);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
       title: const Text('Edit nickname'),
       content: TextField(
-        controller: controller,
+        controller: _controller,
         autofocus: true,
         textCapitalization: TextCapitalization.words,
         decoration: const InputDecoration(labelText: 'Nickname'),
@@ -115,18 +173,12 @@ Future<void> _showNicknameEditor(
           child: const Text('Cancel'),
         ),
         TextButton(
-          onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+          onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
           child: const Text('Save'),
         ),
       ],
-    ),
-  );
-  controller.dispose();
-
-  if (result == null || result.isEmpty || result == profile.fullName) return;
-
-  await ref.read(profileRepositoryProvider).updateFullName(profile.id, result);
-  ref.invalidate(currentProfileProvider);
+    );
+  }
 }
 
 class _AvatarPicker extends ConsumerStatefulWidget {
@@ -144,24 +196,34 @@ class _AvatarPickerState extends ConsumerState<_AvatarPicker> {
   Future<void> _pick() async {
     final picked = await ImagePicker().pickImage(
       source: ImageSource.gallery,
-      maxWidth: 640,
-      maxHeight: 640,
-      imageQuality: 85,
+      // No maxWidth/maxHeight here — the crop step needs the original
+      // resolution to crop from; downscaling happens after, on the
+      // already-cropped result.
+      imageQuality: 90,
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
+
+    final originalBytes = await picked.readAsBytes();
+    if (!mounted) return;
+    final cropped = await Navigator.of(context).push<Uint8List>(
+      MaterialPageRoute(
+        builder: (_) => _CropAvatarScreen(imageBytes: originalBytes),
+        fullscreenDialog: true,
+      ),
+    );
+    if (cropped == null || !mounted) return;
 
     setState(() => _uploading = true);
     try {
-      final bytes = await picked.readAsBytes();
-      final ext = picked.path.contains('.')
-          ? picked.path.split('.').last.toLowerCase()
-          : 'jpg';
+      // The crop step always produces a circle-masked PNG regardless of
+      // the source format, so the uploaded extension/content-type need
+      // to match that rather than the originally-picked file's.
       await ref
           .read(profileRepositoryProvider)
           .uploadAvatar(
             userId: widget.profile.id,
-            bytes: bytes,
-            fileExtension: ext,
+            bytes: cropped,
+            fileExtension: 'png',
           );
       ref.invalidate(currentProfileProvider);
     } catch (_) {
@@ -239,6 +301,78 @@ class _AvatarPickerState extends ConsumerState<_AvatarPicker> {
   }
 }
 
+/// Full-screen circular crop step shown between picking a gallery photo
+/// and uploading it — pops with the cropped PNG bytes, or null if the
+/// user backs out.
+class _CropAvatarScreen extends StatefulWidget {
+  const _CropAvatarScreen({required this.imageBytes});
+
+  final Uint8List imageBytes;
+
+  @override
+  State<_CropAvatarScreen> createState() => _CropAvatarScreenState();
+}
+
+class _CropAvatarScreenState extends State<_CropAvatarScreen> {
+  final _controller = CropController();
+  bool _cropping = false;
+
+  void _onCropped(CropResult result) {
+    switch (result) {
+      case CropSuccess(:final croppedImage):
+        Navigator.of(context).pop(croppedImage);
+      case CropFailure():
+        setState(() => _cropping = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not crop that photo — try again.')),
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: const Text('Crop photo'),
+        actions: [
+          TextButton(
+            onPressed: _cropping
+                ? null
+                : () {
+                    setState(() => _cropping = true);
+                    _controller.cropCircle();
+                  },
+            child: const Text(
+              'Done',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          Crop(
+            image: widget.imageBytes,
+            controller: _controller,
+            withCircleUi: true,
+            baseColor: Colors.black,
+            maskColor: Colors.black.withValues(alpha: 0.75),
+            onCropped: _onCropped,
+          ),
+          if (_cropping)
+            const ColoredBox(
+              color: Colors.black38,
+              child: Center(child: CircularProgressIndicator(color: Colors.white)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CompletedGoalsCard extends ConsumerWidget {
   const _CompletedGoalsCard({required this.userId});
 
@@ -258,6 +392,34 @@ class _CompletedGoalsCard extends ConsumerWidget {
           Text(completed?.toString() ?? '—', style: textTheme.titleLarge),
           const SizedBox(width: 8),
           Text('Goals completed', style: textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+class _CharityGivenCard extends ConsumerWidget {
+  const _CharityGivenCard({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textTheme = Theme.of(context).textTheme;
+    final statsAsync = ref.watch(publicProfileStatsProvider(userId));
+    final givenRand = statsAsync.value?.charityGivenRand;
+
+    return BentoCard(
+      child: Row(
+        children: [
+          const Icon(Icons.volunteer_activism_rounded, color: AppColors.accentDeep),
+          const SizedBox(width: 12),
+          Text(
+            givenRand == null ? '—' : 'R${givenRand.toStringAsFixed(2)}',
+            style: textTheme.titleLarge,
+          ),
+          const SizedBox(width: 8),
+          Text('Given to charity', style: textTheme.bodySmall),
         ],
       ),
     );

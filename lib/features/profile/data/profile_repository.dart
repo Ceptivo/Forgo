@@ -42,6 +42,20 @@ class ProfileRepository {
     return result as bool;
   }
 
+  /// Throws [ProfileException] with a friendly message if the format is
+  /// invalid, the username is taken, or the 30-day cooldown hasn't
+  /// elapsed yet — see change_username in
+  /// 0008_username_cooldown_and_charity.sql for the enforcement.
+  Future<void> changeUsername(String newUsername) async {
+    try {
+      await _client
+          .rpc('change_username', params: {'p_new_username': newUsername})
+          .timeout(_networkTimeout);
+    } on PostgrestException catch (e) {
+      throw ProfileException(e.message);
+    }
+  }
+
   /// Uploads to the public `avatars` bucket at `<userId>/avatar.<ext>`
   /// (upsert, so re-uploading replaces the old file) and points
   /// profiles.avatar_url at it. Returns the new URL.
@@ -53,7 +67,14 @@ class ProfileRepository {
     final path = '$userId/avatar.$fileExtension';
     await _client.storage
         .from('avatars')
-        .uploadBinary(path, bytes, fileOptions: const FileOptions(upsert: true))
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(
+            upsert: true,
+            contentType: 'image/$fileExtension',
+          ),
+        )
         .timeout(_networkTimeout);
 
     // Cache-bust: the object path doesn't change on re-upload, so without
@@ -70,4 +91,13 @@ class ProfileRepository {
 
     return url;
   }
+}
+
+class ProfileException implements Exception {
+  const ProfileException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }

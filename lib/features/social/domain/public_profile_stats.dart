@@ -10,6 +10,7 @@ class PublicProfileStats {
     required this.followerCount,
     required this.followingCount,
     required this.completedGoalsCount,
+    required this.charityGivenCents,
     required this.isFollowing,
   });
 
@@ -22,6 +23,7 @@ class PublicProfileStats {
       followerCount: (map['follower_count'] as num).toInt(),
       followingCount: (map['following_count'] as num).toInt(),
       completedGoalsCount: (map['completed_goals_count'] as num).toInt(),
+      charityGivenCents: (map['charity_given_cents'] as num?)?.toInt() ?? 0,
       isFollowing: map['is_following'] as bool,
     );
   }
@@ -33,5 +35,8 @@ class PublicProfileStats {
   final int followerCount;
   final int followingCount;
   final int completedGoalsCount;
+  final int charityGivenCents;
   final bool isFollowing;
+
+  double get charityGivenRand => charityGivenCents / 100;
 }

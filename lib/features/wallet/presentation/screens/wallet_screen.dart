@@ -188,12 +188,17 @@ class _TransactionTile extends StatelessWidget {
           context,
           icon: Icons.emoji_events_rounded,
           color: AppColors.success,
-          title: _refundDescription(transaction.goal, transaction.createdAt),
+          title: _refundDescription(transaction.goal),
           amountText: '+R${transaction.amountRand.toStringAsFixed(2)}',
           amountColor: AppColors.success,
           subtitle: DateFormat.yMMMd().add_jm().format(transaction.createdAt),
         );
       case WalletTransactionType.topup:
+        // Only a completed top-up has actually added money to the
+        // wallet — a pending/failed/cancelled one gets its status
+        // called out instead of a green "+", which would otherwise
+        // claim money arrived that didn't.
+        final completed = transaction.status == WalletTransactionStatus.completed;
         final (icon, color, label) = switch (transaction.status) {
           WalletTransactionStatus.completed => (
             Icons.check_circle_rounded,
@@ -220,7 +225,10 @@ class _TransactionTile extends StatelessWidget {
           context,
           icon: icon,
           color: color,
-          title: 'Top-up · R${transaction.amountRand.toStringAsFixed(2)}',
+          title: 'Top-up',
+          amountText:
+              '${completed ? '+' : ''}R${transaction.amountRand.toStringAsFixed(2)}',
+          amountColor: completed ? AppColors.success : AppColors.textMuted,
           subtitle:
               '$label · ${DateFormat.yMMMd().add_jm().format(transaction.createdAt)}',
         );
@@ -236,10 +244,12 @@ class _TransactionTile extends StatelessWidget {
     return 'Goal | $title · Weekly commitment';
   }
 
-  String _refundDescription(Goal? goal, DateTime completedAt) {
-    final when = DateFormat.yMMMd().format(completedAt);
-    if (goal == null) return 'Goal Achieved | $when';
-    return 'Goal Achieved | ${goal.title} on $when';
+  // No date here — the row's own subtitle already carries the
+  // transaction's timestamp, so repeating it in the title would just be
+  // redundant.
+  String _refundDescription(Goal? goal) {
+    if (goal == null) return 'Goal Achieved';
+    return 'Goal Achieved | ${goal.title}';
   }
 
   Widget _tile(

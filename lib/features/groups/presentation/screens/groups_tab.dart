@@ -9,13 +9,28 @@ import '../../application/goal_group_providers.dart';
 import '../../domain/goal_group.dart';
 import 'group_detail_screen.dart';
 
-/// The "Groups" side of the Goals tab's segmented toggle — list of the
-/// caller's groups, or an empty state prompting them to start/join one.
-class GroupsTab extends ConsumerWidget {
+/// The "Groups" side of the Goals tab's segmented toggle — a search
+/// field plus the caller's groups, or an empty state prompting them to
+/// start/join one.
+class GroupsTab extends ConsumerStatefulWidget {
   const GroupsTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GroupsTab> createState() => _GroupsTabState();
+}
+
+class _GroupsTabState extends ConsumerState<GroupsTab> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final groupsAsync = ref.watch(myGoalGroupsProvider);
     final textTheme = Theme.of(context).textTheme;
 
@@ -47,10 +62,36 @@ class GroupsTab extends ConsumerWidget {
             ),
           );
         }
+
+        final query = _query.trim().toLowerCase();
+        final filtered = query.isEmpty
+            ? groups
+            : groups
+                  .where((g) => g.name.toLowerCase().contains(query))
+                  .toList();
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final group in groups) _GroupCard(group: group),
+            TextField(
+              controller: _searchController,
+              onChanged: (value) => setState(() => _query = value),
+              decoration: const InputDecoration(
+                hintText: 'Search your groups',
+                prefixIcon: Icon(Icons.search_rounded),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (filtered.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  'No groups found for "$_query".',
+                  style: textTheme.bodyMedium,
+                ),
+              )
+            else
+              for (final group in filtered) _GroupCard(group: group),
             const SizedBox(height: 72), // clear of the FAB
           ],
         );
@@ -83,7 +124,17 @@ class _GroupCard extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
-              child: const Icon(Icons.groups_rounded, color: AppColors.accentDeep),
+              clipBehavior: Clip.antiAlias,
+              child: group.imageUrl != null
+                  ? ClipOval(
+                      child: Image.network(
+                        group.imageUrl!,
+                        width: 44,
+                        height: 44,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : const Icon(Icons.groups_rounded, color: AppColors.accentDeep),
             ),
             const SizedBox(width: 14),
             Expanded(

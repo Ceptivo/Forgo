@@ -27,12 +27,7 @@ class UserProfileScreen extends ConsumerWidget {
     final isSelf = ref.watch(currentUserProvider)?.id == userId;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Profile'),
-      ),
+      appBar: AppBar(title: const Text('Profile')),
       body: statsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -47,7 +42,7 @@ class UserProfileScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: kToolbarHeight + 8),
+                const SizedBox(height: 8),
                 Center(
                   child: Container(
                     width: 84,

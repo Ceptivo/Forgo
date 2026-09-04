@@ -384,13 +384,43 @@ class _GroupRoundsList extends ConsumerWidget {
           );
         }
         final memberCount = namesAsync.value?.length ?? 0;
+        final active = rounds
+            .where((r) => r.status == GoalGroupRoundStatus.active)
+            .toList();
+        final done = rounds
+            .where((r) => r.status != GoalGroupRoundStatus.active)
+            .toList();
+
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final round in rounds)
+            Text('Active Goals', style: textTheme.titleMedium),
+            const SizedBox(height: 10),
+            if (active.isEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _RoundRow(round: round, memberCount: memberCount),
-              ),
+                child: Text(
+                  'No active goal right now.',
+                  style: textTheme.bodySmall,
+                ),
+              )
+            else
+              for (final round in active)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _RoundRow(round: round, memberCount: memberCount),
+                ),
+            const SizedBox(height: 8),
+            Text('Completed Goals', style: textTheme.titleMedium),
+            const SizedBox(height: 10),
+            if (done.isEmpty)
+              Text('Nothing completed yet.', style: textTheme.bodySmall)
+            else
+              for (final round in done)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _RoundRow(round: round, memberCount: memberCount),
+                ),
           ],
         );
       },

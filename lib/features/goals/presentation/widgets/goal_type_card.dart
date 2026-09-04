@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 
 /// A full-width row in the goal-type stack (Distance / Time / Weight
-/// loss) — icon, title + "Verified via..." tag, a short description of
-/// what the goal type actually means, and a selection indicator.
+/// loss) — icon, title + "Verified via..." tag, and a short description
+/// of what the goal type actually means. Selection is shown purely
+/// through the card's own background/border color, no separate
+/// indicator icon.
 class GoalTypeCard extends StatelessWidget {
   const GoalTypeCard({
     super.key,
@@ -87,12 +89,6 @@ class GoalTypeCard extends StatelessWidget {
                     Text(description, style: textTheme.bodySmall),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                selected ? Icons.check_circle_rounded : Icons.circle_outlined,
-                color: selected ? AppColors.accentDeep : AppColors.textMuted,
-                size: 22,
               ),
             ],
           ),

@@ -43,97 +43,97 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       // No app bar — that pushed the greeting down from where it used to
-      // sit. The info icon instead floats over the top-right corner of
-      // the original layout, which stays exactly where it was.
-      body: Stack(
-        children: [
-          ResponsivePage(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      // sit. The info icon instead sits in the same row as the greeting
+      // text, so it's genuinely in line with it rather than eyeballed
+      // via a fixed offset.
+      body: ResponsivePage(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 8),
-                Text(
-                  firstName == null ? 'Welcome to Forgo' : 'Hey, $firstName',
-                  style: textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Stake money, prove it with a photo, keep it.',
-                  style: textTheme.bodyMedium,
-                ),
-                if (hasError)
-                  RetryableError(
-                    message: 'Could not load your data.',
-                    onRetry: retry,
+                Expanded(
+                  child: Text(
+                    firstName == null ? 'Welcome to Forgo' : 'Hey, $firstName',
+                    style: textTheme.headlineMedium,
                   ),
-                const SizedBox(height: 24),
-                _ActiveGoalsCard(
-                  activeCount: activeGoalsCount,
-                  onTap: activeGoalsCount == 0
-                      ? openNewGoal
-                      : () => context.go('/goals'),
                 ),
-                const SizedBox(height: 12),
-                BentoGrid(
-                  items: [
-                    BentoGridItem(
-                      size: BentoSize.half,
-                      child: _StatCard(
-                        icon: Icons.account_balance_wallet_rounded,
-                        label: 'Wallet',
-                        value:
-                            'R${(profile?.walletBalanceRand ?? 0).toStringAsFixed(0)}',
-                        onTap: () => context.go('/wallet'),
-                      ),
-                    ),
-                    BentoGridItem(
-                      size: BentoSize.half,
-                      child: profile == null
-                          ? const _StatCard(
-                              icon: Icons.volunteer_activism_rounded,
-                              label: 'Given to charity',
-                              value: '—',
-                            )
-                          : _CharityStatCard(userId: profile.id),
-                    ),
-                  ],
+                IconButton(
+                  tooltip: 'About Forgo',
+                  icon: const Icon(Icons.info_outline_rounded),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AboutScreen()),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                if (profile != null) _StreakSection(userId: profile.id),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Text('Your goals', style: textTheme.titleMedium),
-                    const Spacer(),
-                    if (activeGoalsCount > 0)
-                      TextButton(
-                        onPressed: () => context.go('/goals'),
-                        child: const Text('See all'),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _GoalListPreview(
-                  goals: goalsAsync.value ?? const [],
-                  loading: goalsAsync.isLoading,
-                  onNewGoal: openNewGoal,
-                ),
-                const SizedBox(height: 24),
               ],
             ),
-          ),
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            right: 12,
-            child: IconButton(
-              tooltip: 'About Forgo',
-              icon: const Icon(Icons.info_outline_rounded),
-              onPressed: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const AboutScreen())),
+            const SizedBox(height: 4),
+            Text(
+              'Stake money, prove it with a photo, keep it.',
+              style: textTheme.bodyMedium,
             ),
-          ),
-        ],
+            if (hasError)
+              RetryableError(
+                message: 'Could not load your data.',
+                onRetry: retry,
+              ),
+            const SizedBox(height: 24),
+            _ActiveGoalsCard(
+              activeCount: activeGoalsCount,
+              onTap: activeGoalsCount == 0
+                  ? openNewGoal
+                  : () => context.go('/goals'),
+            ),
+            const SizedBox(height: 12),
+            BentoGrid(
+              items: [
+                BentoGridItem(
+                  size: BentoSize.half,
+                  child: _StatCard(
+                    icon: Icons.account_balance_wallet_rounded,
+                    label: 'Wallet',
+                    value:
+                        'R${(profile?.walletBalanceRand ?? 0).toStringAsFixed(0)}',
+                    onTap: () => context.go('/wallet'),
+                  ),
+                ),
+                BentoGridItem(
+                  size: BentoSize.half,
+                  child: profile == null
+                      ? const _StatCard(
+                          icon: Icons.volunteer_activism_rounded,
+                          label: 'Given to charity',
+                          value: '—',
+                        )
+                      : _CharityStatCard(userId: profile.id),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (profile != null) _StreakSection(userId: profile.id),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Text('Your goals', style: textTheme.titleMedium),
+                const Spacer(),
+                if (activeGoalsCount > 0)
+                  TextButton(
+                    onPressed: () => context.go('/goals'),
+                    child: const Text('See all'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _GoalListPreview(
+              goals: goalsAsync.value ?? const [],
+              loading: goalsAsync.isLoading,
+              onNewGoal: openNewGoal,
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }

@@ -25,14 +25,7 @@ class ProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(currentProfileProvider);
 
     return Scaffold(
-      // The app bar floats transparently over the scrolling content below
-      // it (rather than reserving its own solid strip) so the avatar and
-      // page content are visible sliding underneath it as the page
-      // scrolls, instead of a solid block sitting on top.
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         title: const Text('Profile'),
         actions: [
           IconButton(
@@ -60,11 +53,7 @@ class ProfileScreen extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ResponsivePage's own SafeArea already clears the status
-                // bar; this just adds the app bar's own toolbar height on
-                // top of that, since extendBodyBehindAppBar means SafeArea
-                // doesn't know to reserve space for it.
-                const SizedBox(height: kToolbarHeight + 8),
+                const SizedBox(height: 8),
                 _AvatarPicker(profile: profile),
                 const SizedBox(height: 16),
                 Row(

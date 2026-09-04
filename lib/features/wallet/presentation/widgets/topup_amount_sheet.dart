@@ -64,6 +64,12 @@ class _TopUpAmountSheetState extends State<_TopUpAmountSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text('Top up wallet', style: textTheme.headlineSmall),
+          const SizedBox(height: 6),
+          Text(
+            "Money you add can't be withdrawn yet — it can only be staked "
+            'on goals.',
+            style: textTheme.bodySmall,
+          ),
           const SizedBox(height: 16),
           Wrap(
             spacing: 10,

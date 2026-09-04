@@ -10,6 +10,7 @@ import '../../application/goal_group_providers.dart';
 import '../../data/goal_group_repository.dart';
 import '../../domain/goal_group_invite.dart';
 import '../widgets/create_or_join_group_sheet.dart';
+import 'community_screen.dart';
 import 'group_detail_screen.dart';
 import 'groups_tab.dart';
 
@@ -81,7 +82,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                 const _PendingInvites(),
                 const GroupsTab(),
               ] else
-                const _CommunityPlaceholder(),
+                const _CommunitySection(),
             ],
           ),
         ),
@@ -131,8 +132,8 @@ class _ViewToggleBox extends StatelessWidget {
 /// group today is invite-code-only. Forgo's own community space is the
 /// one exception, shown here as a static card rather than something
 /// users create.
-class _CommunityPlaceholder extends StatelessWidget {
-  const _CommunityPlaceholder();
+class _CommunitySection extends StatelessWidget {
+  const _CommunitySection();
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +142,9 @@ class _CommunityPlaceholder extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         BentoCard(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CommunityScreen()),
+          ),
           child: Row(
             children: [
               Container(
@@ -163,6 +167,7 @@ class _CommunityPlaceholder extends StatelessWidget {
                   ],
                 ),
               ),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
             ],
           ),
         ),

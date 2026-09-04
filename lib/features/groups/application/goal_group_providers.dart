@@ -9,6 +9,14 @@ import '../domain/goal_group_message.dart';
 import '../domain/goal_group_round.dart';
 import '../domain/goal_group_stake.dart';
 
+/// Fixed id of the Forgo community "group" — see 0015_community.sql.
+/// Every user is a member of it automatically; it's built entirely on
+/// the same goal_groups/goal_group_goals/goal_group_stakes machinery as
+/// a normal group, just with no chat and (unlike every other group)
+/// more than one active round allowed at once, so a daily and a weekly
+/// community goal can run side by side.
+const kCommunityGroupId = '00000000-0000-0000-0000-000000000001';
+
 final goalGroupRepositoryProvider = Provider<GoalGroupRepository>((ref) {
   return GoalGroupRepository(ref.watch(supabaseClientProvider));
 });
@@ -53,6 +61,17 @@ final goalGroupActiveRoundProvider = FutureProvider.autoDispose
         if (round.status == GoalGroupRoundStatus.active) return round;
       }
       return null;
+    });
+
+/// Every currently-active round for a group — plural, unlike
+/// [goalGroupActiveRoundProvider], since the community group (and only
+/// the community group) can have more than one active round at once.
+final goalGroupActiveRoundsProvider = FutureProvider.autoDispose
+    .family<List<GoalGroupRound>, String>((ref, groupId) async {
+      final rounds = await ref.watch(goalGroupRoundsProvider(groupId).future);
+      return rounds
+          .where((r) => r.status == GoalGroupRoundStatus.active)
+          .toList();
     });
 
 final goalGroupRoundStakesProvider = FutureProvider.autoDispose

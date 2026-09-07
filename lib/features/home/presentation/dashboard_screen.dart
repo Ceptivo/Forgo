@@ -51,6 +51,15 @@ class DashboardScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Image.asset(
+                'assets/images/logo.png',
+                height: 32,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [

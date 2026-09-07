@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/retryable_error.dart';
 import '../../application/support_providers.dart';
+import '../widgets/charity_logo.dart';
+import 'charity_detail_screen.dart';
 
 /// The charities a goal's forfeited stake goes toward — the (i) icon
 /// explains how the split actually works.
@@ -52,31 +54,43 @@ class CharitiesScreen extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final charity = charities[index];
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
+              return Material(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(20),
+                child: InkWell(
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.surfaceBorder),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.volunteer_activism_rounded,
-                      color: AppColors.accentDeep,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CharityDetailScreen(charity: charity),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(charity.name, style: textTheme.titleMedium),
-                          const SizedBox(height: 2),
-                          Text(charity.description, style: textTheme.bodySmall),
-                        ],
-                      ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.surfaceBorder),
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        CharityLogo(logoUrl: charity.logoUrl),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(charity.name, style: textTheme.titleMedium),
+                              const SizedBox(height: 2),
+                              Text(charity.description, style: textTheme.bodySmall),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: AppColors.textMuted,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               );
             },

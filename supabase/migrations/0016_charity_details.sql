@@ -47,9 +47,8 @@ where not exists (
   select 1 from public.charities where name = 'The Baby House Westville'
 );
 
--- Once you've added the logo file to the app (see the app repo's
--- assets/images/ folder) or uploaded it somewhere public, point this at
--- it:
---   update public.charities
---   set logo_url = 'assets/images/charity_baby_house_westville.png'
---   where name = 'The Baby House Westville';
+-- The logo is bundled at assets/images/charity_baby_house_westville.jpg —
+-- point logo_url at it:
+update public.charities
+set logo_url = 'assets/images/charity_baby_house_westville.jpg'
+where name = 'The Baby House Westville';

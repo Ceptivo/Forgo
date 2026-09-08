@@ -67,11 +67,29 @@ class WalletRepository {
       };
     }
 
+    final leagueIds = rows
+        .map((row) => row['league_id'] as String?)
+        .whereType<String>()
+        .toSet();
+
+    var leagueNamesById = const <String, String>{};
+    if (leagueIds.isNotEmpty) {
+      final leagueRows = await _client
+          .from('leagues')
+          .select('id, name')
+          .inFilter('id', leagueIds.toList())
+          .timeout(_networkTimeout);
+      leagueNamesById = {
+        for (final row in leagueRows) row['id'] as String: row['name'] as String,
+      };
+    }
+
     return rows
         .map(
           (row) => WalletTransaction.fromMap(
             row,
             goal: goalsById[row['goal_id']],
+            leagueName: leagueNamesById[row['league_id']],
           ),
         )
         .toList();

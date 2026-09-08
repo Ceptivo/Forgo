@@ -2,11 +2,13 @@ import '../../goals/domain/goal.dart';
 
 enum WalletTransactionStatus { pending, completed, failed, cancelled }
 
-enum WalletTransactionType { topup, goalStake, goalRefund }
+enum WalletTransactionType { topup, goalStake, goalRefund, leagueEntry, leaguePrize }
 
 WalletTransactionType _typeFromString(String value) => switch (value) {
   'goal_stake' => WalletTransactionType.goalStake,
   'goal_refund' => WalletTransactionType.goalRefund,
+  'league_entry' => WalletTransactionType.leagueEntry,
+  'league_prize' => WalletTransactionType.leaguePrize,
   _ => WalletTransactionType.topup,
 };
 
@@ -18,14 +20,19 @@ class WalletTransaction {
     required this.status,
     required this.createdAt,
     this.goal,
+    this.leagueName,
   });
 
-  /// [goal] is looked up separately (see WalletRepository.fetchTransactions)
-  /// since a transaction only stores a goal_id — this keeps the "Goal |
-  /// Run 5km by ..." wording built from the same Goal.title/deadline the
-  /// rest of the app already uses, rather than duplicating that
-  /// formatting logic in SQL.
-  factory WalletTransaction.fromMap(Map<String, dynamic> map, {Goal? goal}) {
+  /// [goal] and [leagueName] are looked up separately (see
+  /// WalletRepository.fetchTransactions) since a transaction only stores
+  /// a goal_id/league_id — this keeps the "Goal | Run 5km by ..." /
+  /// "League | No Turning Back" wording built from the same data the
+  /// rest of the app already uses, rather than duplicating it in SQL.
+  factory WalletTransaction.fromMap(
+    Map<String, dynamic> map, {
+    Goal? goal,
+    String? leagueName,
+  }) {
     return WalletTransaction(
       id: map['id'] as String,
       type: _typeFromString(map['type'] as String),
@@ -36,6 +43,7 @@ class WalletTransaction {
       ),
       createdAt: DateTime.parse(map['created_at'] as String),
       goal: goal,
+      leagueName: leagueName,
     );
   }
 
@@ -45,6 +53,7 @@ class WalletTransaction {
   final WalletTransactionStatus status;
   final DateTime createdAt;
   final Goal? goal;
+  final String? leagueName;
 
   double get amountRand => amountCents / 100;
 }

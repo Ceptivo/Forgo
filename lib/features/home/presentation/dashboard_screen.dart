@@ -10,6 +10,9 @@ import '../../goals/application/goal_providers.dart';
 import '../../goals/domain/goal.dart';
 import '../../goals/presentation/screens/new_goal_screen.dart';
 import '../../goals/presentation/widgets/goal_card.dart';
+import '../../league/application/league_providers.dart';
+import '../../league/presentation/screens/league_screen.dart';
+import '../../league/presentation/widgets/league_standing_row.dart';
 import '../../profile/application/profile_providers.dart';
 import '../../social/application/social_providers.dart';
 import '../../streaks/application/streak_providers.dart';
@@ -123,6 +126,7 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             if (profile != null) _StreakSection(userId: profile.id),
             const SizedBox(height: 24),
+            const _LeagueTopThreeCard(),
             Row(
               children: [
                 Text('Your goals', style: textTheme.titleMedium),
@@ -142,6 +146,65 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Top 3 standings of the current "No Turning Back" league — only shows
+/// once the league has actually started and someone's on the board.
+class _LeagueTopThreeCard extends ConsumerWidget {
+  const _LeagueTopThreeCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final league = ref.watch(currentLeagueProvider).value;
+    if (league == null || !league.hasStarted(DateTime.now().toUtc())) {
+      return const SizedBox.shrink();
+    }
+    final standings = ref.watch(leagueStandingsProvider(league.id)).value;
+    final names = ref.watch(leagueMemberNamesProvider).value;
+    if (standings == null || standings.isEmpty) return const SizedBox.shrink();
+
+    final textTheme = Theme.of(context).textTheme;
+    final top3 = standings.take(3).toList();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => LeagueScreen(leagueId: league.id)),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.surfaceBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(league.name, style: textTheme.titleMedium),
+                    const Spacer(),
+                    const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+                  ],
+                ),
+                for (var i = 0; i < top3.length; i++)
+                  LeagueStandingRow(
+                    rank: i + 1,
+                    name: names?[top3[i].userId] ?? 'Member',
+                    standing: top3[i],
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );

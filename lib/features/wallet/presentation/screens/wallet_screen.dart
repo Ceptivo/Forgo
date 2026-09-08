@@ -193,6 +193,26 @@ class _TransactionTile extends StatelessWidget {
           amountColor: AppColors.success,
           subtitle: DateFormat.yMMMd().add_jm().format(transaction.createdAt),
         );
+      case WalletTransactionType.leagueEntry:
+        return _tile(
+          context,
+          icon: Icons.bolt_rounded,
+          color: AppColors.danger,
+          title: 'League | ${transaction.leagueName ?? 'Entry fee'}',
+          amountText: '-R${transaction.amountRand.toStringAsFixed(2)}',
+          amountColor: AppColors.danger,
+          subtitle: DateFormat.yMMMd().add_jm().format(transaction.createdAt),
+        );
+      case WalletTransactionType.leaguePrize:
+        return _tile(
+          context,
+          icon: Icons.emoji_events_rounded,
+          color: AppColors.success,
+          title: 'League Won | ${transaction.leagueName ?? 'Prize'}',
+          amountText: '+R${transaction.amountRand.toStringAsFixed(2)}',
+          amountColor: AppColors.success,
+          subtitle: DateFormat.yMMMd().add_jm().format(transaction.createdAt),
+        );
       case WalletTransactionType.topup:
         // Only a completed top-up has actually added money to the
         // wallet — a pending/failed/cancelled one gets its status

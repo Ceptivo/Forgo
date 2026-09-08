@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -74,17 +76,54 @@ class GoalRepository {
     );
   }
 
+  /// Uploads a Strava screenshot to the public `goal_proofs` bucket at
+  /// `<userId>/<goalId>-<timestamp>.<ext>` — a unique filename per upload
+  /// (unlike avatars/group images, which upsert in place) since a
+  /// recurring weekly goal logs progress many times and each week's
+  /// proof needs to survive the next week's upload. Returns the public
+  /// URL, to pass straight into [logGoalProgress].
+  Future<String> uploadGoalProof({
+    required String userId,
+    required String goalId,
+    required Uint8List bytes,
+    required String fileExtension,
+  }) async {
+    final path =
+        '$userId/$goalId-${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+    await _client.storage
+        .from('goal_proofs')
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(contentType: 'image/$fileExtension'),
+        )
+        .timeout(_networkTimeout);
+    return _client.storage.from('goal_proofs').getPublicUrl(path);
+  }
+
   /// Self-reports progress on a distance/time goal — still no automated
   /// verification anywhere in the app (see create_goal_with_stake above),
-  /// so this is the user's own word that they did it. Logs an activity
-  /// check-in (feeding the streak heatmap) and, for a one-off ('once')
-  /// goal, also completes it and refunds the stake; a recurring
-  /// ('weekly') goal just extends the streak and stays active, since it
-  /// has no fixed end date.
-  Future<Goal> logGoalProgress(String goalId) async {
+  /// so this is the user's own word that they did it, now backed by an
+  /// attached Strava screenshot and username rather than just a tap.
+  /// Logs an activity check-in (feeding the streak heatmap) and, for a
+  /// one-off ('once') goal, also completes it and refunds the stake; a
+  /// recurring ('weekly') goal just extends the streak and stays active,
+  /// since it has no fixed end date.
+  Future<Goal> logGoalProgress({
+    required String goalId,
+    required String proofImageUrl,
+    required String stravaUsername,
+  }) async {
     try {
       final result = await _client
-          .rpc('log_goal_progress', params: {'p_goal_id': goalId})
+          .rpc(
+            'log_goal_progress',
+            params: {
+              'p_goal_id': goalId,
+              'p_proof_image_url': proofImageUrl,
+              'p_strava_username': stravaUsername,
+            },
+          )
           .timeout(_networkTimeout);
       return Goal.fromMap(result as Map<String, dynamic>);
     } on PostgrestException catch (e) {

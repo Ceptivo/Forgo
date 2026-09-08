@@ -74,6 +74,9 @@ class Goal {
     this.weightLossTargetKg,
     this.timeMinutes,
     this.deadline,
+    this.completedAt,
+    this.proofImageUrl,
+    this.stravaUsername,
   });
 
   factory Goal.fromMap(Map<String, dynamic> map) {
@@ -98,6 +101,11 @@ class Goal {
       deadline: map['deadline'] == null
           ? null
           : DateTime.parse(map['deadline'] as String),
+      completedAt: map['completed_at'] == null
+          ? null
+          : DateTime.parse(map['completed_at'] as String),
+      proofImageUrl: map['proof_image_url'] as String?,
+      stravaUsername: map['strava_username'] as String?,
     );
   }
 
@@ -112,6 +120,9 @@ class Goal {
   final double? weightLossTargetKg;
   final int? timeMinutes;
   final DateTime? deadline;
+  final DateTime? completedAt;
+  final String? proofImageUrl;
+  final String? stravaUsername;
 
   double get stakeRand => stakeCents / 100;
 

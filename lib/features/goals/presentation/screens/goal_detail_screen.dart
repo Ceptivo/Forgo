@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
 import '../../../auth/application/auth_providers.dart';
+import '../../../profile/application/profile_providers.dart';
+import '../../../profile/presentation/screens/strava_screen.dart';
 import '../../../social/application/social_providers.dart';
 import '../../../streaks/application/streak_providers.dart';
 import '../../../wallet/application/wallet_providers.dart';
@@ -32,38 +35,24 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
   late Goal _goal = widget.goal;
   bool _busy = false;
 
-  Future<void> _logProgress() async {
-    setState(() => _busy = true);
-    try {
-      final updated = await ref
-          .read(goalRepositoryProvider)
-          .logGoalProgress(_goal.id);
-      ref.invalidate(goalsProvider);
-      ref.invalidate(streakSummaryProvider);
-      ref.invalidate(checkInHistoryProvider);
-      ref.invalidate(walletTransactionsProvider);
-      final userId = ref.read(currentUserProvider)?.id;
-      if (userId != null) ref.invalidate(publicProfileStatsProvider(userId));
-      if (!mounted) return;
-      setState(() => _goal = updated);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            updated.status == GoalStatus.completed
-                ? 'Goal completed — your stake is back in your wallet.'
-                : "Logged for today — keep the streak going.",
-          ),
+  void _onProgressLogged(Goal updated) {
+    ref.invalidate(goalsProvider);
+    ref.invalidate(streakSummaryProvider);
+    ref.invalidate(checkInHistoryProvider);
+    ref.invalidate(walletTransactionsProvider);
+    final userId = ref.read(currentUserProvider)?.id;
+    if (userId != null) ref.invalidate(publicProfileStatsProvider(userId));
+    if (!mounted) return;
+    setState(() => _goal = updated);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          updated.status == GoalStatus.completed
+              ? 'Goal completed — your stake is back in your wallet.'
+              : "Logged for today — keep the streak going.",
         ),
-      );
-    } on GoalException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+      ),
+    );
   }
 
   Future<void> _markWeightLossReached() async {
@@ -183,21 +172,7 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
                   onPressed: _markWeightLossReached,
                 )
               else
-                _ActionCard(
-                  title: goal.distanceCadence == DistanceCadence.once
-                      ? "Done it?"
-                      : "Log today's progress",
-                  body: goal.distanceCadence == DistanceCadence.once
-                      ? 'Self-reported, same as everywhere else in Forgo — '
-                            'this completes the goal and refunds your stake.'
-                      : 'Adds today to your streak. This goal stays active '
-                            "since it's a recurring, weekly commitment.",
-                  buttonLabel: goal.distanceCadence == DistanceCadence.once
-                      ? 'Mark as done'
-                      : "Log today's ${distanceActivityLabel(goal.distanceActivity!).toLowerCase()}",
-                  busy: _busy,
-                  onPressed: _logProgress,
-                ),
+                _StravaUploadCard(goal: goal, onLogged: _onProgressLogged),
             ],
           ],
         ),
@@ -273,6 +248,193 @@ class _ActionCard extends StatelessWidget {
                   : Text(buttonLabel),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The self-report action for a distance/time goal — same trust level as
+/// everywhere else in Forgo (nothing here reads or checks the
+/// screenshot), but now backed by an attached Strava screenshot and
+/// username rather than just a tap, so there's a real record behind it.
+class _StravaUploadCard extends ConsumerStatefulWidget {
+  const _StravaUploadCard({required this.goal, required this.onLogged});
+
+  final Goal goal;
+  final ValueChanged<Goal> onLogged;
+
+  @override
+  ConsumerState<_StravaUploadCard> createState() => _StravaUploadCardState();
+}
+
+class _StravaUploadCardState extends ConsumerState<_StravaUploadCard> {
+  XFile? _picked;
+  bool _busy = false;
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _picked = picked);
+  }
+
+  Future<void> _submit(String stravaUsername) async {
+    final picked = _picked;
+    if (picked == null) return;
+
+    setState(() => _busy = true);
+    try {
+      final userId = ref.read(currentUserProvider)!.id;
+      final bytes = await picked.readAsBytes();
+      final extension = picked.name.contains('.')
+          ? picked.name.split('.').last.toLowerCase()
+          : 'jpg';
+      final proofUrl = await ref
+          .read(goalRepositoryProvider)
+          .uploadGoalProof(
+            userId: userId,
+            goalId: widget.goal.id,
+            bytes: bytes,
+            fileExtension: extension,
+          );
+      final updated = await ref
+          .read(goalRepositoryProvider)
+          .logGoalProgress(
+            goalId: widget.goal.id,
+            proofImageUrl: proofUrl,
+            stravaUsername: stravaUsername,
+          );
+      if (!mounted) return;
+      setState(() => _picked = null);
+      widget.onLogged(updated);
+    } on GoalException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not upload — try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final goal = widget.goal;
+    final textTheme = Theme.of(context).textTheme;
+    final stravaUsername = ref.watch(currentProfileProvider).value?.stravaUsername;
+    final missingUsername = stravaUsername == null || stravaUsername.isEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.surfaceBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Image.asset(
+                'assets/images/strava.png',
+                width: 28,
+                height: 28,
+                errorBuilder: (_, _, _) => const Icon(
+                  Icons.directions_run_rounded,
+                  color: AppColors.accentDeep,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text('Upload Strava', style: textTheme.titleMedium),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (missingUsername) ...[
+            Text(
+              'Strava username missing',
+              style: textTheme.bodyMedium?.copyWith(
+                color: AppColors.danger,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Add your Strava username in Settings before you can upload '
+              'proof for this goal.',
+              style: textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const StravaScreen()),
+              ),
+              child: const Text('Add Strava username'),
+            ),
+          ] else ...[
+            Text(
+              'Upload a screenshot of this activity from Strava — the '
+              'activity type, distance, and time should be visible.',
+              style: textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            if (_picked != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle_rounded, color: AppColors.success),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _picked!.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _busy ? null : _pickImage,
+                icon: const Icon(Icons.image_outlined),
+                label: Text(_picked == null ? 'Choose screenshot' : 'Change screenshot'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: (_picked == null || _busy)
+                    ? null
+                    : () => _submit(stravaUsername),
+                child: _busy
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(
+                        goal.distanceCadence == DistanceCadence.once
+                            ? 'Mark as done'
+                            : "Log today's ${distanceActivityLabel(goal.distanceActivity!).toLowerCase()}",
+                      ),
+              ),
+            ),
+          ],
         ],
       ),
     );

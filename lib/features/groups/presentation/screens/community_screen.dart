@@ -7,7 +7,7 @@ import '../../../../core/widgets/retryable_error.dart';
 import '../../../auth/application/auth_providers.dart';
 import '../../../league/application/league_providers.dart';
 import '../../../league/presentation/screens/create_league_screen.dart';
-import '../../../league/presentation/screens/league_screen.dart';
+import '../../../league/presentation/widgets/cash_prize_challenge_banner.dart';
 import '../../application/goal_group_providers.dart';
 import '../../data/goal_group_repository.dart';
 import '../../domain/goal_group_round.dart';
@@ -63,80 +63,11 @@ class CommunityScreen extends ConsumerWidget {
             tabs: [Tab(text: 'Goals'), Tab(text: 'Leaderboard')],
           ),
         ),
-        body: Column(
+        body: const TabBarView(
           children: [
-            const _LeagueBanner(),
-            const Expanded(
-              child: TabBarView(
-                children: [
-                  _CommunityGoalsTab(),
-                  LeaderboardList(groupId: kCommunityGroupId),
-                ],
-              ),
-            ),
+            _CommunityGoalsTab(),
+            LeaderboardList(groupId: kCommunityGroupId),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A card pointing at the current "No Turning Back" league, if one has
-/// ever been created — nothing shows if there isn't one yet.
-class _LeagueBanner extends ConsumerWidget {
-  const _LeagueBanner();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final leagueAsync = ref.watch(currentLeagueProvider);
-    final league = leagueAsync.value;
-    if (league == null) return const SizedBox.shrink();
-
-    final now = DateTime.now().toUtc();
-    final subtitle = !league.hasStarted(now)
-        ? 'Starts soon · R${league.entryFeeRand.toStringAsFixed(0)} entry · R${league.prizeRand.toStringAsFixed(0)} prize'
-        : league.hasFinished(now)
-        ? (league.isFinalized ? 'Finished' : 'Awaiting results')
-        : '30 days, no turning back — in progress';
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Material(
-        color: AppColors.ink,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => LeagueScreen(leagueId: league.id)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Icon(Icons.bolt_rounded, color: AppColors.accent),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        league.name,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: Colors.white),
-                      ),
-                      Text(
-                        subtitle,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded, color: Colors.white70),
-              ],
-            ),
-          ),
         ),
       ),
     );
@@ -170,19 +101,25 @@ class _CommunityGoalsTab extends ConsumerWidget {
         data: (rounds) {
           if (rounds.isEmpty) {
             return ResponsivePage(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 48),
-                child: Column(
-                  children: [
-                    Text('No community goal right now', style: textTheme.titleLarge),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Check back soon — new ones get added regularly.',
-                      textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const CashPrizeChallengeBanner(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 48),
+                    child: Column(
+                      children: [
+                        Text('No community goal right now', style: textTheme.titleLarge),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Check back soon — new ones get added regularly.',
+                          textAlign: TextAlign.center,
+                          style: textTheme.bodyMedium,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           }
@@ -190,6 +127,7 @@ class _CommunityGoalsTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const CashPrizeChallengeBanner(),
                 for (final round in rounds)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),

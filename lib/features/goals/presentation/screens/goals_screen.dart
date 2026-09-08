@@ -5,8 +5,7 @@ import '../../../../core/responsive/responsive.dart';
 import '../../../../core/widgets/bento_grid.dart';
 import '../../../../core/widgets/dock_clear_fab.dart';
 import '../../../../core/widgets/retryable_error.dart';
-import '../../../league/application/league_providers.dart';
-import '../../../league/presentation/screens/league_screen.dart';
+import '../../../league/presentation/widgets/cash_prize_challenge_banner.dart';
 import '../../application/goal_providers.dart';
 import '../../domain/goal.dart';
 import '../widgets/goal_card.dart';
@@ -52,7 +51,7 @@ class GoalsScreen extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const _CashPrizeChallengeBanner(),
+                    const CashPrizeChallengeBanner(),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 48),
                       child: Column(
@@ -89,7 +88,7 @@ class GoalsScreen extends ConsumerWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _CashPrizeChallengeBanner(),
+                  const CashPrizeChallengeBanner(),
                   Text('Active Goals', style: textTheme.titleMedium),
                   const SizedBox(height: 12),
                   if (active.isEmpty)
@@ -136,49 +135,6 @@ class GoalsScreen extends ConsumerWidget {
             },
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Links into the current "No Turning Back" league — nothing shows if
-/// one's never been created (see the League feature's own founder-only
-/// Create League flow). Rendered at the same height as a GoalCard
-/// (~88dp) rather than the banner's own aspect ratio, so it sits
-/// consistently among the goal cards below it.
-class _CashPrizeChallengeBanner extends ConsumerWidget {
-  const _CashPrizeChallengeBanner();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final league = ref.watch(currentLeagueProvider).value;
-    if (league == null) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Cash Prize Challenges', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
-          Material(
-            borderRadius: BorderRadius.circular(20),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => LeagueScreen(leagueId: league.id)),
-              ),
-              child: SizedBox(
-                height: 88,
-                child: Image.asset(
-                  'assets/images/no_turning_back_banner.png',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -46,23 +46,14 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       // No app bar — that pushed the greeting down from where it used to
-      // sit. The info icon instead sits in the same row as the greeting
-      // text, so it's genuinely in line with it rather than eyeballed
-      // via a fixed offset.
+      // sit. The logo (tapping it opens About Forgo) instead sits in the
+      // same row as the greeting text, so it's genuinely in line with it
+      // rather than eyeballed via a fixed offset.
       body: ResponsivePage(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Image.asset(
-                'assets/images/logo.png',
-                height: 32,
-                fit: BoxFit.contain,
-              ),
-            ),
-            const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -74,7 +65,11 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 IconButton(
                   tooltip: 'About Forgo',
-                  icon: const Icon(Icons.info_outline_rounded),
+                  icon: Image.asset(
+                    'assets/images/logo.png',
+                    height: 28,
+                    fit: BoxFit.contain,
+                  ),
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const AboutScreen()),
                   ),

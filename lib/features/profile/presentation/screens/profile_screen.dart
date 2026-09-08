@@ -98,6 +98,8 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                 const SizedBox(height: 20),
+                LevelProgressCard(xp: profile.xp),
+                const SizedBox(height: 12),
                 FollowStatsRow(userId: profile.id),
                 const SizedBox(height: 12),
                 CompletedGoalsCard(userId: profile.id),

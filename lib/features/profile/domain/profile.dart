@@ -10,6 +10,7 @@ class Profile {
     required this.walletBalanceCents,
     required this.createdAt,
     this.stravaUsername,
+    this.xp = 0,
   });
 
   factory Profile.fromMap(Map<String, dynamic> map) {
@@ -26,6 +27,7 @@ class Profile {
       walletBalanceCents: (map['wallet_balance_cents'] as num?)?.toInt() ?? 0,
       createdAt: DateTime.parse(map['created_at'] as String),
       stravaUsername: map['strava_username'] as String?,
+      xp: (map['xp'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -39,6 +41,7 @@ class Profile {
   final int walletBalanceCents;
   final DateTime createdAt;
   final String? stravaUsername;
+  final int xp;
 
   double get walletBalanceRand => walletBalanceCents / 100;
 }

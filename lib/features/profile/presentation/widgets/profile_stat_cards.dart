@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/bento_grid.dart';
+import '../../../../core/xp/level.dart';
 import '../../../social/application/social_providers.dart';
 import '../../../social/presentation/screens/follow_list_screen.dart';
 import '../../../streaks/application/streak_providers.dart';
@@ -17,6 +18,54 @@ TextStyle? _labelStyle(BuildContext context) =>
       color: AppColors.textPrimary,
       fontWeight: FontWeight.w600,
     );
+
+/// Level + XP progress bar, computed purely client-side from [xp] (see
+/// lib/core/xp/level.dart — the same formula as the backend's
+/// xp_stake_base/xp_for_level functions in
+/// supabase/migrations/0021_xp_level_system.sql, so there's never a round
+/// trip just to know what level someone's on).
+class LevelProgressCard extends StatelessWidget {
+  const LevelProgressCard({super.key, required this.xp});
+
+  final int xp;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final progress = levelProgressForXp(xp);
+
+    return BentoCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Level ${progress.level}',
+                style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const Spacer(),
+              Text(
+                '${progress.xpIntoLevel} / ${progress.xpForNextLevel} XP',
+                style: _labelStyle(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress.fraction,
+              minHeight: 8,
+              backgroundColor: AppColors.surfaceBorder,
+              valueColor: const AlwaysStoppedAnimation(AppColors.accentDeep),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// The stat/info cards shared by a user's own profile and the profile
 /// they show to everyone else — kept as one shared set of widgets so the

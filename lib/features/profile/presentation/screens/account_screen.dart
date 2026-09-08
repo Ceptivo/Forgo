@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/retryable_error.dart';
+import '../../../auth/application/auth_providers.dart';
 import '../../application/profile_providers.dart';
 import '../../data/profile_repository.dart';
 import '../../domain/profile.dart';
@@ -50,6 +51,12 @@ class AccountScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               _AccountRow(label: 'Email', value: profile.email),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                icon: const Icon(Icons.logout),
+                label: const Text('Log out'),
+              ),
             ],
           );
         },

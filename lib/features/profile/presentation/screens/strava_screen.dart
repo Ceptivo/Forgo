@@ -76,7 +76,7 @@ class _StravaScreenState extends ConsumerState<StravaScreen> {
             Row(
               children: [
                 Image.asset(
-                  'assets/images/strava_logo.png',
+                  'assets/images/strava.png',
                   width: 40,
                   height: 40,
                   errorBuilder: (_, _, _) => Container(

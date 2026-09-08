@@ -143,9 +143,9 @@ class GoalsScreen extends ConsumerWidget {
 
 /// Links into the current "No Turning Back" league — nothing shows if
 /// one's never been created (see the League feature's own founder-only
-/// Create League flow). The banner image is a fixed design (see
-/// assets/images/no_turning_back_banner.png), so its own aspect ratio
-/// keeps it from ever being stretched or cropped oddly across devices.
+/// Create League flow). Rendered at the same height as a GoalCard
+/// (~88dp) rather than the banner's own aspect ratio, so it sits
+/// consistently among the goal cards below it.
 class _CashPrizeChallengeBanner extends ConsumerWidget {
   const _CashPrizeChallengeBanner();
 
@@ -168,11 +168,12 @@ class _CashPrizeChallengeBanner extends ConsumerWidget {
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => LeagueScreen(leagueId: league.id)),
               ),
-              child: AspectRatio(
-                aspectRatio: 2114 / 320,
+              child: SizedBox(
+                height: 88,
                 child: Image.asset(
                   'assets/images/no_turning_back_banner.png',
                   fit: BoxFit.cover,
+                  width: double.infinity,
                 ),
               ),
             ),

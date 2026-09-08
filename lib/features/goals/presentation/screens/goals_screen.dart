@@ -8,6 +8,7 @@ import '../../../../core/widgets/retryable_error.dart';
 import '../../application/goal_providers.dart';
 import '../../domain/goal.dart';
 import '../widgets/goal_card.dart';
+import 'completed_goals_list_screen.dart';
 import 'new_goal_screen.dart';
 
 class GoalsScreen extends ConsumerWidget {
@@ -104,12 +105,22 @@ class GoalsScreen extends ConsumerWidget {
                       'Nothing completed yet.',
                       style: textTheme.bodySmall,
                     )
-                  else
-                    for (final goal in done)
+                  else ...[
+                    for (final goal in done.take(3))
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: GoalCard(goal: goal),
                       ),
+                    if (done.length > 3)
+                      OutlinedButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => CompletedGoalsListScreen(goals: done),
+                          ),
+                        ),
+                        child: const Text('View more'),
+                      ),
+                  ],
                   const SizedBox(height: 72), // clear of the FAB
                 ],
               );

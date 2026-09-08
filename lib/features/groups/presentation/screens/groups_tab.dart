@@ -7,6 +7,7 @@ import '../../../../core/widgets/bento_grid.dart';
 import '../../../../core/widgets/retryable_error.dart';
 import '../../application/goal_group_providers.dart';
 import '../../domain/goal_group.dart';
+import '../widgets/group_avatar.dart';
 import 'group_detail_screen.dart';
 
 /// The "Groups" side of the Goals tab's segmented toggle — a search
@@ -116,26 +117,7 @@ class _GroupCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(
-                color: AppColors.accentDim,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              clipBehavior: Clip.antiAlias,
-              child: group.imageUrl != null
-                  ? ClipOval(
-                      child: Image.network(
-                        group.imageUrl!,
-                        width: 44,
-                        height: 44,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : const Icon(Icons.groups_rounded, color: AppColors.accentDeep),
-            ),
+            GroupAvatar(imageUrl: group.imageUrl),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

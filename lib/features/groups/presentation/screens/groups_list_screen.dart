@@ -10,6 +10,7 @@ import '../../application/goal_group_providers.dart';
 import '../../data/goal_group_repository.dart';
 import '../../domain/goal_group_invite.dart';
 import '../widgets/create_or_join_group_sheet.dart';
+import '../widgets/group_avatar.dart';
 import 'community_screen.dart';
 import 'group_detail_screen.dart';
 import 'groups_tab.dart';
@@ -132,12 +133,13 @@ class _ViewToggleBox extends StatelessWidget {
 /// group today is invite-code-only. Forgo's own community space is the
 /// one exception, shown here as a static card rather than something
 /// users create.
-class _CommunitySection extends StatelessWidget {
+class _CommunitySection extends ConsumerWidget {
   const _CommunitySection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
+    final communityGroup = ref.watch(goalGroupByIdProvider(kCommunityGroupId)).value;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -147,16 +149,7 @@ class _CommunitySection extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  color: AppColors.accentDim,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: const Icon(Icons.groups_rounded, color: AppColors.accentDeep),
-              ),
+              GroupAvatar(imageUrl: communityGroup?.imageUrl),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

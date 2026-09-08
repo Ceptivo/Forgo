@@ -12,6 +12,7 @@ import '../../application/goal_group_providers.dart';
 import '../../data/goal_group_repository.dart';
 import '../../domain/goal_group_round.dart';
 import '../../domain/goal_group_stake.dart';
+import '../widgets/group_avatar.dart';
 import '../widgets/leaderboard_list.dart';
 
 /// Forgo's own community — every user is automatically a member (see
@@ -23,12 +24,20 @@ class CommunityScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isFounder = ref.watch(isForgoFounderProvider).value ?? false;
+    final communityGroup = ref.watch(goalGroupByIdProvider(kCommunityGroupId)).value;
 
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Forgo'),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GroupAvatar(imageUrl: communityGroup?.imageUrl, size: 32),
+              const SizedBox(width: 10),
+              const Text('Forgo'),
+            ],
+          ),
           actions: [
             if (isFounder)
               IconButton(

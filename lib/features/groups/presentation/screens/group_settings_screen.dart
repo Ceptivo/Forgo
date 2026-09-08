@@ -13,6 +13,7 @@ import '../../application/goal_group_providers.dart';
 import '../../data/goal_group_repository.dart';
 import '../../domain/goal_group.dart';
 import '../../domain/goal_group_round.dart';
+import '../widgets/group_avatar.dart';
 import 'group_members_screen.dart';
 
 /// Replaces what used to be a single "copy invite code" tap on the (i)
@@ -279,32 +280,22 @@ class _GroupImagePickerState extends ConsumerState<_GroupImagePicker> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            Container(
-              width: 84,
-              height: 84,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accentDim,
-              ),
-              alignment: Alignment.center,
-              clipBehavior: Clip.antiAlias,
-              child: _uploading
-                  ? const SizedBox(
+            _uploading
+                ? Container(
+                    width: 84,
+                    height: 84,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.accentDim,
+                    ),
+                    alignment: Alignment.center,
+                    child: const SizedBox(
                       height: 24,
                       width: 24,
                       child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : imageUrl != null
-                  ? ClipOval(
-                      child: Image.network(
-                        imageUrl,
-                        width: 84,
-                        height: 84,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : const Icon(Icons.groups_rounded, color: AppColors.accentDeep, size: 32),
-            ),
+                    ),
+                  )
+                : GroupAvatar(imageUrl: imageUrl, size: 84),
             Positioned(
               right: -2,
               bottom: -2,

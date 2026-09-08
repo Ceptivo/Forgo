@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/responsive/responsive.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/filter_choice_chip.dart';
 import '../../domain/goal.dart';
 import '../widgets/goal_card.dart';
 
@@ -84,13 +84,13 @@ class _CompletedGoalsListScreenState extends State<CompletedGoalsListScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _CategoryChip(
+                FilterChoiceChip(
                   label: 'All',
                   selected: _category == null,
                   onTap: () => setState(() => _category = null),
                 ),
                 for (final category in _GoalCategory.values)
-                  _CategoryChip(
+                  FilterChoiceChip(
                     label: _categoryLabels[category]!,
                     selected: _category == category,
                     onTap: () => setState(() => _category = category),
@@ -113,43 +113,6 @@ class _CompletedGoalsListScreenState extends State<CompletedGoalsListScreen> {
                   child: GoalCard(goal: goal),
                 ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.accentDim : AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selected ? AppColors.accent : AppColors.surfaceBorder,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppColors.accentDeep : AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
-          ),
         ),
       ),
     );

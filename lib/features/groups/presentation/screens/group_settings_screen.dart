@@ -30,7 +30,9 @@ class GroupSettingsScreen extends ConsumerWidget {
     final groupAsync = ref.watch(goalGroupByIdProvider(groupId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Group settings')),
+      appBar: AppBar(
+        title: Text(groupId == kCommunityGroupId ? 'Community settings' : 'Group settings'),
+      ),
       body: groupAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -174,37 +176,42 @@ class _SettingsBodyState extends ConsumerState<_SettingsBody> {
                   )
                 : const Text('Save changes'),
           ),
-          const SizedBox(height: 28),
-          Text('Invite code', style: textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.surfaceBorder),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.group.inviteCode,
-                    style: textTheme.titleLarge?.copyWith(letterSpacing: 2),
+          // The Forgo Community is auto-joined for every user (see
+          // 0015_community.sql) — there's no invite code to show since
+          // nobody ever needs one to get in.
+          if (widget.group.id != kCommunityGroupId) ...[
+            const SizedBox(height: 28),
+            Text('Invite code', style: textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.surfaceBorder),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.group.inviteCode,
+                      style: textTheme.titleLarge?.copyWith(letterSpacing: 2),
+                    ),
                   ),
-                ),
-                OutlinedButton(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: widget.group.inviteCode));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Invite code copied')),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
-                  child: const Text('Copy code'),
-                ),
-              ],
+                  OutlinedButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: widget.group.inviteCode));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Invite code copied')),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
+                    child: const Text('Copy code'),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: 28),
           Text('Members', style: textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -213,19 +220,23 @@ class _SettingsBodyState extends ConsumerState<_SettingsBody> {
           Text('Goals', style: textTheme.titleMedium),
           const SizedBox(height: 12),
           _GroupRoundsList(groupId: widget.group.id),
-          const SizedBox(height: 28),
-          OutlinedButton.icon(
-            onPressed: _leaving ? null : _confirmAndLeave,
-            style: OutlinedButton.styleFrom(foregroundColor: AppColors.danger),
-            icon: _leaving
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.logout_rounded),
-            label: const Text('Leave group'),
-          ),
+          // Membership in the Forgo Community isn't invite-code based —
+          // it's automatic for every user — so "leave" doesn't fit here.
+          if (widget.group.id != kCommunityGroupId) ...[
+            const SizedBox(height: 28),
+            OutlinedButton.icon(
+              onPressed: _leaving ? null : _confirmAndLeave,
+              style: OutlinedButton.styleFrom(foregroundColor: AppColors.danger),
+              icon: _leaving
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.logout_rounded),
+              label: const Text('Leave group'),
+            ),
+          ],
           const SizedBox(height: DockClearFab.clearance),
         ],
       ),

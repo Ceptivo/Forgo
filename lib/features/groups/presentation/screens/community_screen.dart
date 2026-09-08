@@ -14,6 +14,7 @@ import '../../domain/goal_group_round.dart';
 import '../../domain/goal_group_stake.dart';
 import '../widgets/group_avatar.dart';
 import '../widgets/leaderboard_list.dart';
+import 'group_settings_screen.dart';
 
 /// Forgo's own community — every user is automatically a member (see
 /// 0015_community.sql). No chat here, just goals set by the developer
@@ -39,7 +40,16 @@ class CommunityScreen extends ConsumerWidget {
             ],
           ),
           actions: [
-            if (isFounder)
+            if (isFounder) ...[
+              IconButton(
+                tooltip: 'Community settings',
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const GroupSettingsScreen(groupId: kCommunityGroupId),
+                  ),
+                ),
+              ),
               IconButton(
                 tooltip: 'Create league',
                 icon: const Icon(Icons.add_circle_outline_rounded),
@@ -47,6 +57,7 @@ class CommunityScreen extends ConsumerWidget {
                   MaterialPageRoute(builder: (_) => const CreateLeagueScreen()),
                 ),
               ),
+            ],
           ],
           bottom: const TabBar(
             tabs: [Tab(text: 'Goals'), Tab(text: 'Leaderboard')],

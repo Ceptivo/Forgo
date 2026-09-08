@@ -14,11 +14,13 @@ final streakSummaryProvider = FutureProvider.autoDispose
       return ref.watch(streakRepositoryProvider).fetchSummary(userId);
     });
 
-/// Roughly a year of history — enough for the 52-week badge's heatmap to
-/// show real progress without fetching an unbounded amount of data.
+/// Just the current calendar month — the heatmap only ever shows one
+/// month at a time, so there's no reason to fetch further back than its
+/// first day.
 final checkInHistoryProvider = FutureProvider.autoDispose
     .family<List<ActivityCheckIn>, String>((ref, userId) {
-      final since = DateTime.now().subtract(const Duration(days: 371));
+      final now = DateTime.now();
+      final since = DateTime(now.year, now.month, 1);
       return ref
           .watch(streakRepositoryProvider)
           .fetchHistory(userId: userId, since: since);

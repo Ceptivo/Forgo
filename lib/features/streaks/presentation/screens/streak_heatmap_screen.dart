@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -262,20 +263,23 @@ class _Heatmap extends StatelessWidget {
     }
 
     final today = DateTime.now();
-    final startOfThisWeek = DateTime(
-      today.year,
-      today.month,
-      today.day,
-    ).subtract(Duration(days: today.weekday - 1));
-
-    // 16 weeks, oldest first.
+    final monthStart = DateTime(today.year, today.month, 1);
+    final monthEnd = DateTime(today.year, today.month + 1, 0);
+    // Grid starts on the Monday of the week day 1 falls in, so the
+    // calendar lines up under the weekday header.
+    final gridStart = monthStart.subtract(
+      Duration(days: monthStart.weekday - 1),
+    );
+    final weekCount = (monthEnd.difference(gridStart).inDays + 1 + 6) ~/ 7;
     final weekStarts = [
-      for (var i = 15; i >= 0; i--) startOfThisWeek.subtract(Duration(days: 7 * i)),
+      for (var i = 0; i < weekCount; i++) gridStart.add(Duration(days: 7 * i)),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(DateFormat.yMMMM().format(today), style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 10),
         const _WeekdayHeader(),
         const SizedBox(height: 6),
         for (final weekStart in weekStarts)
@@ -286,9 +290,15 @@ class _Heatmap extends StatelessWidget {
                 for (var i = 0; i < 7; i++) ...[
                   if (i > 0) const SizedBox(width: 6),
                   Expanded(
-                    child: _DayCell(
-                      activity: byDate[weekStart.add(Duration(days: i))],
-                      isFuture: weekStart.add(Duration(days: i)).isAfter(today),
+                    child: Builder(
+                      builder: (context) {
+                        final day = weekStart.add(Duration(days: i));
+                        final inMonth = day.month == today.month && day.year == today.year;
+                        return _DayCell(
+                          activity: byDate[day],
+                          isFuture: !inMonth || day.isAfter(today),
+                        );
+                      },
                     ),
                   ),
                 ],

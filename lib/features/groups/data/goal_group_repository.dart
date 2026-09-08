@@ -182,7 +182,18 @@ class GoalGroupRepository {
         .stream(primaryKey: ['id'])
         .eq('group_id', groupId)
         .order('created_at')
-        .map((rows) => rows.map(GoalGroupMessage.fromMap).toList());
+        .map((rows) {
+          // Deduped by id — right when a group is first opened, the
+          // realtime stream's initial snapshot and its first live insert
+          // event can momentarily overlap, otherwise briefly rendering
+          // the "Started the group" system message (or any other) twice.
+          final seen = <String>{};
+          final deduped = <Map<String, dynamic>>[];
+          for (final row in rows) {
+            if (seen.add(row['id'] as String)) deduped.add(row);
+          }
+          return deduped.map(GoalGroupMessage.fromMap).toList();
+        });
   }
 
   Future<void> sendMessage(String groupId, String body) async {

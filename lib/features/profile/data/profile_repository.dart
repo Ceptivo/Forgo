@@ -35,6 +35,18 @@ class ProfileRepository {
         .timeout(_networkTimeout);
   }
 
+  /// Just a stored reference (Settings > Strava), not a real Strava
+  /// connection — no OAuth, nothing fetched from Strava's API. Pass null
+  /// or an empty string to clear it.
+  Future<void> updateStravaUsername(String userId, String? stravaUsername) {
+    final trimmed = stravaUsername?.trim();
+    return _client
+        .from('profiles')
+        .update({'strava_username': (trimmed == null || trimmed.isEmpty) ? null : trimmed})
+        .eq('id', userId)
+        .timeout(_networkTimeout);
+  }
+
   Future<bool> isUsernameAvailable(String username) async {
     final result = await _client
         .rpc('is_username_available', params: {'p_username': username})

@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../support/presentation/screens/charities_screen.dart';
 import '../../../support/presentation/screens/feedback_form_screen.dart';
 import 'account_screen.dart';
+import 'strava_screen.dart';
 
 /// Settings landing screen — a list of categories so more can be added
 /// the same way later.
@@ -23,6 +24,24 @@ class SettingsScreen extends StatelessWidget {
             subtitle: 'Username, date of birth, email',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AccountScreen()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SettingsCategoryTile(
+            icon: Icons.directions_run_rounded,
+            label: 'Strava',
+            subtitle: 'Your Strava username',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const StravaScreen()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SettingsCategoryTile(
+            icon: Icons.volunteer_activism_outlined,
+            label: 'Charities we support',
+            subtitle: "Where a forfeited goal's stake goes",
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CharitiesScreen()),
             ),
           ),
           const SizedBox(height: 12),
@@ -63,15 +82,6 @@ class SettingsScreen extends StatelessWidget {
                   descriptionLabel: 'Why you want it',
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          _SettingsCategoryTile(
-            icon: Icons.volunteer_activism_outlined,
-            label: 'Charities we support',
-            subtitle: "Where a forfeited goal's stake goes",
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CharitiesScreen()),
             ),
           ),
         ],

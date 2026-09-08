@@ -5,6 +5,8 @@ import '../../../../core/responsive/responsive.dart';
 import '../../../../core/widgets/bento_grid.dart';
 import '../../../../core/widgets/dock_clear_fab.dart';
 import '../../../../core/widgets/retryable_error.dart';
+import '../../../league/application/league_providers.dart';
+import '../../../league/presentation/screens/league_screen.dart';
 import '../../application/goal_providers.dart';
 import '../../domain/goal.dart';
 import '../widgets/goal_card.dart';
@@ -47,24 +49,30 @@ class GoalsScreen extends ConsumerWidget {
             ),
             data: (goals) {
               if (goals.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 48),
-                  child: Column(
-                    children: [
-                      const PillBadge(label: 'NO GOALS YET'),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Start your first commitment',
-                        style: textTheme.titleLarge,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _CashPrizeChallengeBanner(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 48),
+                      child: Column(
+                        children: [
+                          const PillBadge(label: 'NO GOALS YET'),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Start your first commitment',
+                            style: textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Tap "New goal" to stake money on a goal.',
+                            textAlign: TextAlign.center,
+                            style: textTheme.bodyMedium,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tap "New goal" to stake money on a goal.',
-                        textAlign: TextAlign.center,
-                        style: textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               }
               final active = goals
@@ -81,6 +89,7 @@ class GoalsScreen extends ConsumerWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const _CashPrizeChallengeBanner(),
                   Text('Active Goals', style: textTheme.titleMedium),
                   const SizedBox(height: 12),
                   if (active.isEmpty)
@@ -127,6 +136,48 @@ class GoalsScreen extends ConsumerWidget {
             },
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Links into the current "No Turning Back" league — nothing shows if
+/// one's never been created (see the League feature's own founder-only
+/// Create League flow). The banner image is a fixed design (see
+/// assets/images/no_turning_back_banner.png), so its own aspect ratio
+/// keeps it from ever being stretched or cropped oddly across devices.
+class _CashPrizeChallengeBanner extends ConsumerWidget {
+  const _CashPrizeChallengeBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final league = ref.watch(currentLeagueProvider).value;
+    if (league == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Cash Prize Challenges', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          Material(
+            borderRadius: BorderRadius.circular(20),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => LeagueScreen(leagueId: league.id)),
+              ),
+              child: AspectRatio(
+                aspectRatio: 2114 / 320,
+                child: Image.asset(
+                  'assets/images/no_turning_back_banner.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
